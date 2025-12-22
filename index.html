@@ -33,15 +33,32 @@
             gap: 20px;
             margin-bottom: 20px;
         }
-        .gauge {
+        
+        /* GRÁFICO SEMICIRCULAR CORREGIDO */
+        .gauge-container {
+            position: relative;
+            width: 200px;
+            height: 100px;
+            margin: 20px auto;
+        }
+        .gauge-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             text-align: center;
-            padding: 20px;
         }
         .gauge-value {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: bold;
             color: #10b981;
+            margin-bottom: 5px;
         }
+        .gauge-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
         .digital-display {
             text-align: center;
             font-family: monospace;
@@ -93,6 +110,25 @@
             height: 300px;
             margin: 20px 0;
         }
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .status-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .esp32-status {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
     </style>
 </head>
 <body>
@@ -101,22 +137,45 @@
             <h1>⚖️ PESA INTELIGENTE - Dashboard Completo</h1>
             <p>Cliente: CLI3U0KM7I1 | Báscula: BSCWSBNSJBD</p>
             <p style="color: green;">✅ Sistema Vercel Unificado - $0 USD</p>
+            <div class="esp32-status">
+                <strong>📡 Estado ESP32:</strong> <span id="esp32ConnectionStatus">🔄 Verificando conexión...</span><br>
+                <strong>📊 Último dato recibido:</strong> <span id="lastESP32Data">Esperando datos...</span><br>
+                <strong>🕒 Última actualización:</strong> <span id="lastESP32Update">--</span>
+            </div>
         </div>
 
         <div class="grid">
-            <!-- Gráfico 1: Medidor -->
+            <!-- Gráfico 1: Medidor Semicircular CORREGIDO -->
             <div class="card">
                 <h2>📊 Nivel de Gas (Gráfico 1)</h2>
-                <div class="gauge">
-                    <div class="gauge-value" id="gasPercentage">47.6%</div>
-                    <p>Disponible</p>
+                <div class="gauge-container">
+                    <svg viewBox="0 0 200 100" style="width: 100%; height: 100%;">
+                        <!-- Fondo del medidor -->
+                        <path d="M 20 80 A 80 80 0 0 1 180 80" 
+                              fill="none" 
+                              stroke="#e2e8f0" 
+                              stroke-width="12"/>
+                        <!-- Progreso del medidor -->
+                        <path id="gaugeProgress" 
+                              d="M 20 80 A 80 80 0 0 1 180 80" 
+                              fill="none" 
+                              stroke="#10b981" 
+                              stroke-width="12" 
+                              stroke-linecap="round" 
+                              style="stroke-dasharray: 251.2; stroke-dashoffset: 125.6; transition: all 1s ease;"/>
+                    </svg>
+                    <div class="gauge-center">
+                        <div id="gasPercentage" class="gauge-value">47.6%</div>
+                        <div class="gauge-label">Disponible</div>
+                    </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div style="text-align: center; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                
+                <div class="status-grid">
+                    <div class="status-item">
                         <strong>Peso Total</strong><br>
                         <span id="totalWeight" style="color: #2563eb; font-size: 1.2rem;">9.76 kg</span>
                     </div>
-                    <div style="text-align: center; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                    <div class="status-item">
                         <strong>Peso Neto</strong><br>
                         <span id="netWeight" style="color: #10b981; font-size: 1.2rem;">4.76 kg</span>
                     </div>
@@ -208,21 +267,29 @@
         <div class="card">
             <h2>🔧 Estado del Sistema</h2>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                <div class="status-item">
                     <div>🌐 <strong>Dashboard</strong></div>
                     <div style="color: #10b981;">✅ Funcionando</div>
                 </div>
-                <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                <div class="status-item">
                     <div>📡 <strong>API</strong></div>
                     <div id="apiStatus" style="color: #f59e0b;">🔄 Verificando</div>
                 </div>
-                <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                <div class="status-item">
                     <div>📊 <strong>3 Gráficos</strong></div>
                     <div style="color: #10b981;">✅ Activos</div>
                 </div>
-                <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                <div class="status-item">
                     <div>⚙️ <strong>Configuración</strong></div>
                     <div id="configStatus" style="color: #10b981;">✅ Funcional</div>
+                </div>
+                <div class="status-item">
+                    <div>📡 <strong>ESP32</strong></div>
+                    <div id="esp32Status" style="color: #f59e0b;">🔄 Esperando</div>
+                </div>
+                <div class="status-item">
+                    <div>💰 <strong>Costo</strong></div>
+                    <div style="color: #10b981;">✅ $0 USD</div>
                 </div>
             </div>
         </div>
@@ -232,7 +299,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script>
-        console.log('🚀 Dashboard cargado correctamente');
+        console.log('🚀 Dashboard cargado - Versión corregida');
         
         // Variables globales
         let weightChart = null;
@@ -240,6 +307,8 @@
             empty_weight: 5.0,
             full_weight: 15.0
         };
+        let lastESP32DataTime = 0;
+        let esp32DataReceived = false;
         
         // Cargar configuración
         function loadConfig() {
@@ -247,6 +316,7 @@
             if (stored) {
                 config = JSON.parse(stored);
                 updateConfigDisplay();
+                console.log('⚙️ Configuración cargada:', config);
             }
         }
         
@@ -261,6 +331,28 @@
         // Guardar configuración
         function saveConfig() {
             localStorage.setItem('pesaInteligente_config', JSON.stringify(config));
+        }
+        
+        // ACTUALIZAR MEDIDOR SEMICIRCULAR CORREGIDO
+        function updateGauge(percentage) {
+            const gauge = document.getElementById('gaugeProgress');
+            const circumference = 251.2; // Circunferencia del arco
+            const offset = circumference - (percentage / 100) * circumference;
+            
+            // Aplicar el offset
+            gauge.style.strokeDashoffset = offset;
+            
+            // Cambiar color según porcentaje
+            let color = '#10b981'; // Verde
+            if (percentage <= 10) color = '#ef4444';      // Rojo
+            else if (percentage <= 25) color = '#f97316'; // Naranja
+            else if (percentage <= 50) color = '#f59e0b'; // Amarillo
+            
+            gauge.style.stroke = color;
+            document.getElementById('gasPercentage').style.color = color;
+            document.getElementById('gasPercentage').textContent = percentage.toFixed(1) + '%';
+            
+            console.log('📊 Medidor actualizado:', percentage.toFixed(1) + '%', 'Color:', color);
         }
         
         // Inicializar gráfico
@@ -288,6 +380,7 @@
                     }
                 }
             });
+            console.log('📈 Gráfico inicializado');
         }
         
         // Generar datos históricos
@@ -325,23 +418,63 @@
             document.getElementById('maxWeight').textContent = maxWeight.toFixed(2) + ' kg';
             document.getElementById('minWeight').textContent = minWeight.toFixed(2) + ' kg';
             document.getElementById('trend').textContent = trend;
+            
+            console.log('📈 Gráfico de curvas actualizado');
         }
         
-        // Actualizar datos
+        // ACTUALIZAR DATOS CON DETECCIÓN DE ESP32 MEJORADA
         async function updateData() {
             try {
-                const response = await fetch('/api/weight-data?clientCode=CLI3U0KM7I1&scaleCode=BSCWSBNSJBD');
+                console.log('🔍 Consultando API para datos actualizados...');
+                const response = await fetch('/api/weight-data?clientCode=CLI3U0KM7I1&scaleCode=BSCWSBNSJBD&t=' + Date.now());
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
+                console.log('📥 Respuesta completa de la API:', data);
                 
                 if (data.success && data.data.current) {
                     const current = data.data.current;
+                    console.log('📊 Datos actuales recibidos:', current);
+                    
+                    // Verificar si son datos nuevos del ESP32
+                    const currentTime = Date.now();
+                    if (data.data.esp32_timestamp) {
+                        const esp32Time = new Date(data.data.esp32_timestamp).getTime();
+                        if (esp32Time > lastESP32DataTime) {
+                            lastESP32DataTime = esp32Time;
+                            esp32DataReceived = true;
+                            console.log('✅ Nuevos datos del ESP32 detectados:', esp32Time);
+                            
+                            // Actualizar estado del ESP32
+                            document.getElementById('esp32ConnectionStatus').textContent = '✅ Conectado y enviando datos';
+                            document.getElementById('esp32ConnectionStatus').style.color = '#10b981';
+                            document.getElementById('lastESP32Data').textContent = current.weight.toFixed(2) + ' kg';
+                            document.getElementById('lastESP32Update').textContent = new Date(esp32Time).toLocaleTimeString();
+                            document.getElementById('esp32Status').textContent = '✅ Activo';
+                            document.getElementById('esp32Status').style.color = '#10b981';
+                        }
+                    }
+                    
+                    // Calcular valores con configuración actual
                     const totalWeight = current.weight;
                     const netWeight = Math.max(0, totalWeight - config.empty_weight);
                     const capacity = config.full_weight - config.empty_weight;
                     const gasPercentage = capacity > 0 ? Math.min(100, Math.max(0, (netWeight / capacity) * 100)) : 0;
                     
-                    // Actualizar valores
-                    document.getElementById('gasPercentage').textContent = gasPercentage.toFixed(1) + '%';
+                    console.log('🧮 Cálculos:', {
+                        totalWeight: totalWeight.toFixed(2),
+                        netWeight: netWeight.toFixed(2),
+                        capacity: capacity.toFixed(2),
+                        gasPercentage: gasPercentage.toFixed(1)
+                    });
+                    
+                    // Actualizar GRÁFICO 1: Medidor semicircular
+                    updateGauge(gasPercentage);
+                    
+                    // Actualizar GRÁFICO 2: Display digital
                     document.getElementById('totalWeight').textContent = totalWeight.toFixed(2) + ' kg';
                     document.getElementById('netWeight').textContent = netWeight.toFixed(2) + ' kg';
                     document.getElementById('digitalWeight').textContent = netWeight.toFixed(2);
@@ -350,16 +483,41 @@
                     document.getElementById('detailCapacity').textContent = capacity.toFixed(2) + ' kg';
                     document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
                     
-                    // Actualizar gráfico
+                    // Actualizar GRÁFICO 3: Curvas de tendencia
                     updateChart(netWeight);
                     
+                    // Estado de conexión API
                     document.getElementById('apiStatus').textContent = '✅ Funcionando';
                     document.getElementById('apiStatus').style.color = '#10b981';
+                    
+                    console.log('✅ Todos los gráficos actualizados exitosamente');
+                } else {
+                    console.log('⚠️ API responde pero sin datos válidos:', data);
+                    document.getElementById('apiStatus').textContent = '⚠️ Sin datos';
+                    document.getElementById('apiStatus').style.color = '#f59e0b';
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('❌ Error actualizando datos:', error);
+                document.getElementById('lastUpdate').textContent = 'Error de conexión';
                 document.getElementById('apiStatus').textContent = '❌ Error';
                 document.getElementById('apiStatus').style.color = '#ef4444';
+                document.getElementById('esp32ConnectionStatus').textContent = '❌ Error de conexión';
+                document.getElementById('esp32ConnectionStatus').style.color = '#ef4444';
+            }
+        }
+        
+        // Verificar estado del ESP32
+        function checkESP32Status() {
+            const now = Date.now();
+            if (esp32DataReceived && (now - lastESP32DataTime) < 60000) {
+                document.getElementById('esp32Status').textContent = '✅ Activo';
+                document.getElementById('esp32Status').style.color = '#10b981';
+            } else if (esp32DataReceived) {
+                document.getElementById('esp32Status').textContent = '⚠️ Sin datos recientes';
+                document.getElementById('esp32Status').style.color = '#f59e0b';
+            } else {
+                document.getElementById('esp32Status').textContent = '🔄 Esperando';
+                document.getElementById('esp32Status').style.color = '#6b7280';
             }
         }
         
@@ -383,6 +541,7 @@
                 document.getElementById('configEdit').classList.remove('hidden');
                 document.getElementById('configStatus').textContent = '🔧 Editando';
                 document.getElementById('configStatus').style.color = '#f59e0b';
+                console.log('✏️ Modo edición activado');
             });
             
             // Botón Cancelar
@@ -392,12 +551,15 @@
                 document.getElementById('configStatus').textContent = '✅ Funcional';
                 document.getElementById('configStatus').style.color = '#10b981';
                 updateConfigDisplay();
+                console.log('❌ Edición cancelada');
             });
             
             // Botón Guardar
             document.getElementById('saveConfigBtn').addEventListener('click', async function() {
                 const emptyWeight = parseFloat(document.getElementById('emptyWeightInput').value);
                 const fullWeight = parseFloat(document.getElementById('fullWeightInput').value);
+                
+                console.log('💾 Intentando guardar configuración:', { emptyWeight, fullWeight });
                 
                 // Validaciones
                 if (isNaN(emptyWeight) || isNaN(fullWeight)) {
@@ -431,6 +593,7 @@
                     });
                     
                     const result = await response.json();
+                    console.log('📡 Respuesta del servidor de configuración:', result);
                     
                     if (result.success) {
                         config.empty_weight = emptyWeight;
@@ -444,34 +607,49 @@
                         document.getElementById('configStatus').style.color = '#10b981';
                         
                         showAlert('✅ Configuración guardada exitosamente.', 'success');
+                        
+                        // Actualizar datos inmediatamente con nueva configuración
                         setTimeout(updateData, 1000);
+                        console.log('✅ Configuración guardada y aplicada:', config);
                     } else {
                         document.getElementById('configStatus').textContent = '❌ Error';
                         document.getElementById('configStatus').style.color = '#ef4444';
                         showAlert('Error: ' + (result.error || 'Error desconocido'), 'error');
                     }
                 } catch (error) {
-                    console.error('Error:', error);
+                    console.error('❌ Error guardando configuración:', error);
                     document.getElementById('configStatus').textContent = '❌ Error';
                     document.getElementById('configStatus').style.color = '#ef4444';
                     showAlert('Error de conexión.', 'error');
                 }
             });
+            
+            console.log('✅ Eventos de configuración configurados');
         }
         
         // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Inicializando dashboard corregido...');
+            
             loadConfig();
             initChart();
             setupEvents();
+            
+            // Primera actualización inmediata
             updateData();
             
-            // Actualizar cada 15 segundos
-            setInterval(updateData, 15000);
+            // Actualizar cada 10 segundos (más frecuente para detectar cambios del ESP32)
+            setInterval(updateData, 10000);
+            
+            // Verificar estado del ESP32 cada 5 segundos
+            setInterval(checkESP32Status, 5000);
             
             console.log('✅ Dashboard inicializado completamente');
-            console.log('📊 3 Gráficos activos');
-            console.log('⚙️ Configuración funcional');
+            console.log('📊 Gráfico 1: Medidor semicircular ✅');
+            console.log('🔢 Gráfico 2: Display digital ✅');
+            console.log('📈 Gráfico 3: Curvas de tendencia ✅');
+            console.log('⚙️ Configuración funcional ✅');
+            console.log('📡 Detección de ESP32 mejorada ✅');
         });
     </script>
 </body>
