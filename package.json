@@ -1,0 +1,13 @@
+{
+  "name": "pesa-inteligente-vercel",
+  "version": "1.0.0",
+  "description": "API para Pesa Inteligente ESP32 con Vercel",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": "24.x"
+  }
+}
