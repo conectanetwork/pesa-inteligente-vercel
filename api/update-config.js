@@ -1,13 +1,9 @@
-// Variable global para configuración (compartida con weight-data.js)
+// Variable global SOLO para configuración del cliente
 if (!global.currentConfig) {
-  global.currentConfig = {
-    empty_weight: 5.0,
-    full_weight: 15.0
-  };
+  global.currentConfig = null; // NO valores por defecto
 }
 
 export default function handler(req, res) {
-  // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -20,17 +16,14 @@ export default function handler(req, res) {
     try {
       const { clientCode, scaleCode, empty_weight, full_weight } = req.body;
       
-      console.log('⚙️ [UPDATE-CONFIG] Solicitud de actualización:', { empty_weight, full_weight });
+      console.log('⚙️ [UPDATE-CONFIG] === CONFIGURACIÓN DEL CLIENTE ===');
+      console.log('⚙️ [UPDATE-CONFIG] Configuración anterior:', global.currentConfig);
+      console.log('⚙️ [UPDATE-CONFIG] Nueva configuración del cliente:', { empty_weight, full_weight });
       
-      // Verificar autenticación
       if (clientCode !== 'CLI3U0KM7I1' || scaleCode !== 'BSCWSBNSJBD') {
-        return res.status(401).json({
-          success: false,
-          error: 'Credenciales inválidas'
-        });
+        return res.status(401).json({ success: false, error: 'Credenciales inválidas' });
       }
       
-      // Validar datos
       if (!empty_weight || !full_weight || empty_weight >= full_weight) {
         return res.status(400).json({
           success: false,
@@ -38,35 +31,34 @@ export default function handler(req, res) {
         });
       }
       
-      // ACTUALIZAR CONFIGURACIÓN GLOBAL
+      // GUARDAR CONFIGURACIÓN DEL CLIENTE
       global.currentConfig = {
         empty_weight: parseFloat(empty_weight),
-        full_weight: parseFloat(full_weight)
+        full_weight: parseFloat(full_weight),
+        configured_at: new Date().toISOString(),
+        configured_by: 'CLIENT'
       };
       
-      console.log('✅ [UPDATE-CONFIG] Configuración actualizada globalmente:', global.currentConfig);
+      console.log('✅ [UPDATE-CONFIG] Configuración del CLIENTE guardada:', global.currentConfig);
+      console.log('✅ [UPDATE-CONFIG] Ahora weight-data.js usará SOLO estos valores del cliente');
       
       return res.status(200).json({
         success: true,
-        message: 'Configuración actualizada correctamente',
+        message: 'Configuración del cliente guardada correctamente',
         config: {
           empty_weight: parseFloat(empty_weight),
           full_weight: parseFloat(full_weight),
           capacity: parseFloat(full_weight) - parseFloat(empty_weight)
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        note: 'Los cálculos ahora usarán únicamente esta configuración del cliente'
       });
       
     } catch (error) {
       console.error('❌ [UPDATE-CONFIG] Error:', error);
-      return res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      return res.status(500).json({ success: false, error: error.message });
     }
   }
   
-  return res.status(405).json({ 
-    error: 'Método no permitido. Use POST para actualizar configuración.' 
-  });
+  return res.status(405).json({ error: 'Método no permitido.' });
 }
