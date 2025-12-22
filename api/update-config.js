@@ -1,3 +1,11 @@
+// Variable global para configuración (compartida con weight-data.js)
+if (!global.currentConfig) {
+  global.currentConfig = {
+    empty_weight: 5.0,
+    full_weight: 15.0
+  };
+}
+
 export default function handler(req, res) {
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -11,6 +19,8 @@ export default function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const { clientCode, scaleCode, empty_weight, full_weight } = req.body;
+      
+      console.log('⚙️ [UPDATE-CONFIG] Solicitud de actualización:', { empty_weight, full_weight });
       
       // Verificar autenticación
       if (clientCode !== 'CLI3U0KM7I1' || scaleCode !== 'BSCWSBNSJBD') {
@@ -28,7 +38,13 @@ export default function handler(req, res) {
         });
       }
       
-      console.log('⚙️ Configuración actualizada:', { empty_weight, full_weight });
+      // ACTUALIZAR CONFIGURACIÓN GLOBAL
+      global.currentConfig = {
+        empty_weight: parseFloat(empty_weight),
+        full_weight: parseFloat(full_weight)
+      };
+      
+      console.log('✅ [UPDATE-CONFIG] Configuración actualizada globalmente:', global.currentConfig);
       
       return res.status(200).json({
         success: true,
@@ -42,7 +58,7 @@ export default function handler(req, res) {
       });
       
     } catch (error) {
-      console.error('❌ Error actualizando configuración:', error);
+      console.error('❌ [UPDATE-CONFIG] Error:', error);
       return res.status(500).json({
         success: false,
         error: error.message
