@@ -1,13 +1,7 @@
 {
   "name": "pesa-inteligente-vercel",
   "version": "1.0.0",
-  "description": "Smart Scale Dashboard",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
-  },
   "engines": {
-    "node": "24.x"
-  },
-  "dependencies": {}
+    "node": "18.x"
+  }
 }
