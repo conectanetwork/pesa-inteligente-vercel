@@ -1,3 +1,11 @@
+// Variable global para configuración
+if (!global.currentConfig) {
+  global.currentConfig = {
+    empty_weight: 5.0,
+    full_weight: 15.0
+  };
+}
+
 export default function handler(req, res) {
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,7 +21,8 @@ export default function handler(req, res) {
       const { clientCode, scaleCode } = req.query;
       
       console.log('📊 [WEIGHT-DATA] Solicitud de datos recibida');
-      console.log('📊 [WEIGHT-DATA] Datos globales disponibles:', global.latestESP32Data);
+      console.log('📊 [WEIGHT-DATA] Configuración actual:', global.currentConfig);
+      console.log('📊 [WEIGHT-DATA] Datos ESP32 disponibles:', global.latestESP32Data);
       
       // Verificar autenticación
       if (clientCode !== 'CLI3U0KM7I1' || scaleCode !== 'BSCWSBNSJBD') {
@@ -23,8 +32,8 @@ export default function handler(req, res) {
         });
       }
       
-      // OBTENER DATOS REALES DEL ESP32 DESDE VARIABLE GLOBAL
-      let currentWeight = 4.94; // Valor por defecto
+      // OBTENER DATOS REALES DEL ESP32
+      let currentWeight = 4.95; // Valor por defecto basado en logs
       let esp32Timestamp = new Date().toISOString();
       let hasRealData = false;
       
@@ -37,17 +46,19 @@ export default function handler(req, res) {
         console.log('⚠️ [WEIGHT-DATA] No hay datos del ESP32, usando valor por defecto:', currentWeight, 'kg');
       }
       
-      // Configuración por defecto (se puede actualizar desde el frontend)
-      const emptyWeight = 5.0;
-      const fullWeight = 15.0;
+      // USAR CONFIGURACIÓN DINÁMICA
+      const emptyWeight = global.currentConfig.empty_weight;
+      const fullWeight = global.currentConfig.full_weight;
       
       // Calcular valores derivados
       const netWeight = Math.max(0, currentWeight - emptyWeight);
       const capacity = fullWeight - emptyWeight;
       const gasPercentage = capacity > 0 ? Math.min(100, Math.max(0, (netWeight / capacity) * 100)) : 0;
       
-      console.log('🧮 [WEIGHT-DATA] Cálculos:', {
+      console.log('🧮 [WEIGHT-DATA] Cálculos con configuración dinámica:', {
         currentWeight: currentWeight.toFixed(3),
+        emptyWeight: emptyWeight.toFixed(1),
+        fullWeight: fullWeight.toFixed(1),
         netWeight: netWeight.toFixed(3),
         gasPercentage: gasPercentage.toFixed(1),
         hasRealData: hasRealData
@@ -73,6 +84,8 @@ export default function handler(req, res) {
         debug: {
           global_data_available: !!global.latestESP32Data,
           esp32_weight: global.latestESP32Data ? global.latestESP32Data.weight : 'N/A',
+          config_empty: emptyWeight,
+          config_full: fullWeight,
           calculated_net: netWeight.toFixed(3),
           calculated_percentage: gasPercentage.toFixed(1)
         }
