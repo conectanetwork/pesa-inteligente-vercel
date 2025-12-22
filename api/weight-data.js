@@ -1,10 +1,12 @@
 // Variables globales
 if (!global.latestESP32Data) {
   global.latestESP32Data = null;
+  console.log('🔥 [WEIGHT-DATA] Variable ESP32 inicializada');
 }
 
 if (!global.currentConfig) {
-  global.currentConfig = null; // NO valores por defecto
+  global.currentConfig = null;
+  console.log('🔥 [WEIGHT-DATA] Variable config inicializada');
 }
 
 export default function handler(req, res) {
@@ -20,17 +22,30 @@ export default function handler(req, res) {
     try {
       const { clientCode, scaleCode } = req.query;
       
-      console.log('📊 [WEIGHT-DATA] === CONSULTA DE DATOS ===');
-      console.log('📊 [WEIGHT-DATA] Configuración disponible:', global.currentConfig);
-      console.log('📊 [WEIGHT-DATA] Datos ESP32 disponibles:', global.latestESP32Data);
+      console.log('🔥 [WEIGHT-DATA] ===== CONSULTA DE DATOS =====');
+      console.log('🔥 [WEIGHT-DATA] global.latestESP32Data existe:', !!global.latestESP32Data);
+      console.log('🔥 [WEIGHT-DATA] global.currentConfig existe:', !!global.currentConfig);
+      
+      if (global.latestESP32Data) {
+        console.log('🔥 [WEIGHT-DATA] Peso en global:', global.latestESP32Data.weight, 'kg');
+        console.log('🔥 [WEIGHT-DATA] Timestamp en global:', global.latestESP32Data.timestamp);
+      } else {
+        console.log('🔥 [WEIGHT-DATA] ❌ NO HAY DATOS DEL ESP32 EN GLOBAL');
+      }
+      
+      if (global.currentConfig) {
+        console.log('🔥 [WEIGHT-DATA] Config en global:', global.currentConfig);
+      } else {
+        console.log('🔥 [WEIGHT-DATA] ❌ NO HAY CONFIGURACIÓN EN GLOBAL');
+      }
       
       if (clientCode !== 'CLI3U0KM7I1' || scaleCode !== 'BSCWSBNSJBD') {
         return res.status(401).json({ success: false, error: 'Credenciales inválidas' });
       }
       
-      // VERIFICAR SI HAY CONFIGURACIÓN DEL CLIENTE
+      // VERIFICAR CONFIGURACIÓN
       if (!global.currentConfig) {
-        console.log('⚠️ [WEIGHT-DATA] NO HAY CONFIGURACIÓN - Cliente debe configurar primero');
+        console.log('🔥 [WEIGHT-DATA] ❌ SIN CONFIGURACIÓN - NECESITA SETUP');
         return res.status(200).json({
           success: true,
           data: {
@@ -53,18 +68,9 @@ export default function handler(req, res) {
         });
       }
       
-      // OBTENER PESO TOTAL DEL ESP32
-      let totalWeight = 0;
-      let esp32Timestamp = new Date().toISOString();
-      let hasRealData = false;
-      
-      if (global.latestESP32Data && global.latestESP32Data.weight) {
-        totalWeight = global.latestESP32Data.weight;
-        esp32Timestamp = global.latestESP32Data.timestamp;
-        hasRealData = true;
-        console.log('✅ [WEIGHT-DATA] PESO TOTAL del ESP32:', totalWeight, 'kg');
-      } else {
-        console.log('⚠️ [WEIGHT-DATA] Sin datos del ESP32');
+      // VERIFICAR DATOS ESP32
+      if (!global.latestESP32Data) {
+        console.log('🔥 [WEIGHT-DATA] ❌ SIN DATOS ESP32');
         return res.status(200).json({
           success: true,
           data: {
@@ -74,9 +80,9 @@ export default function handler(req, res) {
               full_weight: global.currentConfig.full_weight,
               net_weight: 0,
               gas_percentage: 0,
-              timestamp: esp32Timestamp
+              timestamp: new Date().toISOString()
             },
-            esp32_timestamp: esp32Timestamp,
+            esp32_timestamp: new Date().toISOString(),
             has_real_data: false,
             data_source: 'NO_ESP32_DATA',
             config_source: 'CLIENT_SET',
@@ -87,60 +93,56 @@ export default function handler(req, res) {
         });
       }
       
-      // USAR CONFIGURACIÓN DEL CLIENTE (NO VALORES FIJOS)
+      // CALCULAR CON DATOS REALES
+      const totalWeight = global.latestESP32Data.weight;
       const emptyWeight = global.currentConfig.empty_weight;
       const fullWeight = global.currentConfig.full_weight;
-      
-      // CÁLCULOS CORRECTOS
       const netWeight = Math.max(0, totalWeight - emptyWeight);
       const capacity = fullWeight - emptyWeight;
       const gasPercentage = capacity > 0 ? Math.min(100, Math.max(0, (netWeight / capacity) * 100)) : 0;
       
-      console.log('🧮 [WEIGHT-DATA] === CÁLCULOS CON CONFIGURACIÓN DEL CLIENTE ===');
-      console.log('🧮 [WEIGHT-DATA] Peso TOTAL (ESP32):', totalWeight.toFixed(3), 'kg');
-      console.log('🧮 [WEIGHT-DATA] Peso cilindro VACÍO (cliente):', emptyWeight.toFixed(3), 'kg');
-      console.log('🧮 [WEIGHT-DATA] Peso cilindro LLENO (cliente):', fullWeight.toFixed(3), 'kg');
-      console.log('🧮 [WEIGHT-DATA] Peso NETO (gas):', netWeight.toFixed(3), 'kg');
-      console.log('🧮 [WEIGHT-DATA] Porcentaje gas:', gasPercentage.toFixed(1), '%');
-      console.log('🧮 [WEIGHT-DATA] Fórmula: ', totalWeight.toFixed(3), '-', emptyWeight.toFixed(3), '=', netWeight.toFixed(3));
+      console.log('🔥 [WEIGHT-DATA] ===== CÁLCULOS FINALES =====');
+      console.log('🔥 [WEIGHT-DATA] Peso total ESP32:', totalWeight, 'kg');
+      console.log('🔥 [WEIGHT-DATA] Peso vacío config:', emptyWeight, 'kg');
+      console.log('🔥 [WEIGHT-DATA] Peso lleno config:', fullWeight, 'kg');
+      console.log('🔥 [WEIGHT-DATA] Peso neto calculado:', netWeight, 'kg');
+      console.log('🔥 [WEIGHT-DATA] Porcentaje gas:', gasPercentage, '%');
       
       const responseData = {
         success: true,
         data: {
           current: {
-            weight: totalWeight,             // PESO TOTAL DEL ESP32
-            empty_weight: emptyWeight,       // CONFIGURADO POR EL CLIENTE
-            full_weight: fullWeight,         // CONFIGURADO POR EL CLIENTE
-            net_weight: netWeight,           // CALCULADO: total - vacío
-            gas_percentage: gasPercentage,   // CALCULADO: (neto/capacidad)*100
-            timestamp: esp32Timestamp
+            weight: totalWeight,
+            empty_weight: emptyWeight,
+            full_weight: fullWeight,
+            net_weight: netWeight,
+            gas_percentage: gasPercentage,
+            timestamp: global.latestESP32Data.timestamp
           },
-          esp32_timestamp: esp32Timestamp,
-          has_real_data: hasRealData,
+          esp32_timestamp: global.latestESP32Data.timestamp,
+          has_real_data: true,
           data_source: 'ESP32_REAL_WITH_CLIENT_CONFIG',
           config_source: 'CLIENT_SET',
           historical: []
         },
         timestamp: new Date().toISOString(),
         debug: {
-          esp32_total_weight: totalWeight,
-          client_empty_weight: emptyWeight,
-          client_full_weight: fullWeight,
-          calculated_net_weight: netWeight.toFixed(3),
-          calculated_gas_percentage: gasPercentage.toFixed(1),
-          formula: `${totalWeight.toFixed(3)} - ${emptyWeight.toFixed(3)} = ${netWeight.toFixed(3)} kg`
+          esp32_weight: totalWeight,
+          config_empty: emptyWeight,
+          config_full: fullWeight,
+          calculated_net: netWeight,
+          calculated_percentage: gasPercentage,
+          formula: `${totalWeight} - ${emptyWeight} = ${netWeight} kg`
         }
       };
       
-      console.log('📤 [WEIGHT-DATA] === RESPUESTA FINAL ===');
-      console.log('📤 [WEIGHT-DATA] Peso total ESP32:', responseData.data.current.weight, 'kg');
-      console.log('📤 [WEIGHT-DATA] Peso neto calculado:', responseData.data.current.net_weight, 'kg');
-      console.log('📤 [WEIGHT-DATA] Porcentaje gas:', responseData.data.current.gas_percentage, '%');
+      console.log('🔥 [WEIGHT-DATA] ===== RESPUESTA ENVIADA =====');
+      console.log('🔥 [WEIGHT-DATA] Respuesta:', JSON.stringify(responseData, null, 2));
       
       return res.status(200).json(responseData);
       
     } catch (error) {
-      console.error('❌ [WEIGHT-DATA] Error:', error);
+      console.error('❌ [WEIGHT-DATA] ERROR:', error);
       return res.status(500).json({ success: false, error: error.message });
     }
   }
