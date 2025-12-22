@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PESA INTELIGENTE - Dashboard Vercel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #334155;
+            min-height: 100vh;
+        }
+        .header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .logo-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: linear-gradient(135deg, #2563eb, #06b6d4);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+        .logo h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .badge {
+            padding: 0.25rem 0.75rem;
+            background: #e0f2fe;
+            color: #0369a1;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 1.5rem 1.5rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .card-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .card-content {
+            padding: 1.5rem;
+        }
+        .gauge-container {
+            position: relative;
+            width: 12rem;
+            height: 6rem;
+            margin: 0 auto 2rem;
+        }
+        .gauge-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .gauge-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #10b981;
+        }
+        .gauge-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        .status-indicators {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .status-item {
+            padding: 0.75rem;
+            background: #f8fafc;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+        .digital-value {
+            font-family: 'Courier New', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2563eb;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .unit {
+            font-size: 1.25rem;
+            color: #64748b;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            font-size: 0.875rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 600;
+        }
+        @media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .header-content { flex-direction: column; gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="success-message">
+        🎉 ¡DASHBOARD VERCEL UNIFICADO FUNCIONANDO! - Sistema completo en una sola URL - $0 USD
+    </div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">⚖️</div>
+                <div>
+                    <h1>PESA INTELIGENTE</h1>
+                    <p style="font-size: 0.875rem; color: #64748b;">Dashboard Vercel Unificado</p>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="text-align: right; font-size: 0.875rem;">
+                    <p><strong>Cliente:</strong> CLI3U0KM7I1</p>
+                    <p><strong>Báscula:</strong> BSCWSBNSJBD</p>
+                </div>
+                <span class="badge">Vercel Unificado ✅</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="dashboard-grid">
+            <!-- Medidor Principal -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 Nivel de Gas</h2>
+                    <p style="font-size: 0.875rem; color: #64748b;">Porcentaje de líquido disponible</p>
+                </div>
+                <div class="card-content">
+                    <div class="gauge-container">
+                        <svg viewBox="0 0 200 100" style="width: 100%; height: 100%;">
+                            <path d="M 20 80 A 80 80 0 0 1 180 80" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+                            <path id="gaugeProgress" d="M 20 80 A 80 80 0 0 1 180 80" fill="none" stroke="#10b981" stroke-width="12" stroke-linecap="round" style="stroke-dasharray: 251.2 251.2; stroke-dashoffset: 125.6; transition: all 1s ease;"/>
+                        </svg>
+                        <div class="gauge-center">
+                            <div id="gasPercentage" class="gauge-value">47.6%</div>
+                            <div class="gauge-label">Disponible</div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-indicators">
+                        <div class="status-item">
+                            <div><strong>Peso Total</strong></div>
+                            <div id="totalWeight" style="font-size: 1.25rem; color: #2563eb;">9.76 kg</div>
+                        </div>
+                        <div class="status-item">
+                            <div><strong>Peso Neto</strong></div>
+                            <div id="netWeight" style="font-size: 1.25rem; color: #10b981;">4.76 kg</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Digital -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🔢 Peso Neto Actual</h2>
+                    <p style="font-size: 0.875rem; color: #64748b;">Líquido disponible en kilogramos</p>
+                </div>
+                <div class="card-content">
+                    <div class="digital-value">
+                        <span id="digitalWeight">4.76</span>
+                        <span class="unit">kg</span>
+                    </div>
+                    
+                    <div style="border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                        <div class="detail-row">
+                            <span>Peso Total:</span>
+                            <span id="detailTotal">9.76 kg</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Cilindro Vacío:</span>
+                            <span id="detailEmpty">5.00 kg</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Capacidad Total:</span>
+                            <span id="detailCapacity">10.00 kg</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Última actualización:</span>
+                            <span id="lastUpdate">Conectando...</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Estado API:</span>
+                            <span id="apiStatus" style="color: #f59e0b;">Verificando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado del Sistema -->
+        <div class="card" style="margin-top: 1.5rem;">
+            <div class="card-header">
+                <h2>🔧 Estado del Sistema Vercel Unificado</h2>
+            </div>
+            <div class="card-content">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="status-item">
+                        <div>🌐 <strong>Dashboard</strong></div>
+                        <div style="color: #10b981;">✅ Funcionando</div>
+                    </div>
+                    <div class="status-item">
+                        <div>📡 <strong>API Endpoints</strong></div>
+                        <div id="apiStatusIndicator" style="color: #f59e0b;">🔄 Verificando</div>
+                    </div>
+                    <div class="status-item">
+                        <div>⚖️ <strong>ESP32</strong></div>
+                        <div id="esp32Status" style="color: #f59e0b;">🔄 Esperando</div>
+                    </div>
+                    <div class="status-item">
+                        <div>💰 <strong>Costo Total</strong></div>
+                        <div style="color: #10b981;">✅ $0 USD</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 0.5rem;">
+                    <h3 style="margin-bottom: 0.5rem;">🎯 URLs del Sistema:</h3>
+                    <p><strong>Dashboard:</strong> <span id="dashboardUrl"></span></p>
+                    <p><strong>API Datos:</strong> <span id="apiUrl"></span></p>
+                    <p><strong>API ESP32:</strong> <span id="esp32Url"></span></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        console.log('🚀 Dashboard Vercel Unificado cargado');
+        console.log('🌐 URL:', window.location.origin);
+        console.log('💰 Costo: $0 USD');
+        
+        // Mostrar URLs del sistema
+        document.getElementById('dashboardUrl').textContent = window.location.origin;
+        document.getElementById('apiUrl').textContent = window.location.origin + '/api/weight-data';
+        document.getElementById('esp32Url').textContent = window.location.origin + '/api/esp32-data';
+        
+        // Función para actualizar datos
+        async function updateData() {
+            try {
+                console.log('🔍 Consultando API...');
+                const response = await fetch('/api/weight-data?clientCode=CLI3U0KM7I1&scaleCode=BSCWSBNSJBD');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('📥 Respuesta API:', data);
+                
+                if (data.success && data.data.current) {
+                    const current = data.data.current;
+                    
+                    // Actualizar valores
+                    document.getElementById('gasPercentage').textContent = current.gas_percentage.toFixed(1) + '%';
+                    document.getElementById('totalWeight').textContent = current.weight.toFixed(2) + ' kg';
+                    document.getElementById('netWeight').textContent = current.net_weight.toFixed(2) + ' kg';
+                    document.getElementById('digitalWeight').textContent = current.net_weight.toFixed(2);
+                    document.getElementById('detailTotal').textContent = current.weight.toFixed(2) + ' kg';
+                    document.getElementById('detailEmpty').textContent = current.empty_weight.toFixed(2) + ' kg';
+                    document.getElementById('detailCapacity').textContent = (current.full_weight - current.empty_weight).toFixed(2) + ' kg';
+                    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+                    document.getElementById('apiStatus').textContent = '✅ Conectado';
+                    document.getElementById('apiStatus').style.color = '#10b981';
+                    document.getElementById('apiStatusIndicator').textContent = '✅ Funcionando';
+                    document.getElementById('apiStatusIndicator').style.color = '#10b981';
+                    
+                    // Actualizar gauge
+                    const gauge = document.getElementById('gaugeProgress');
+                    const percentage = current.gas_percentage;
+                    const circumference = 251.2;
+                    const offset = circumference - (percentage / 100) * circumference;
+                    gauge.style.strokeDashoffset = offset;
+                    
+                    // Cambiar color según porcentaje
+                    let color = '#10b981';
+                    if (percentage <= 10) color = '#ef4444';
+                    else if (percentage <= 25) color = '#f97316';
+                    else if (percentage <= 50) color = '#f59e0b';
+                    gauge.style.stroke = color;
+                    document.getElementById('gasPercentage').style.color = color;
+                    
+                    console.log('✅ Datos actualizados:', current);
+                } else {
+                    console.log('⚠️ API responde pero sin datos válidos');
+                    document.getElementById('apiStatus').textContent = '⚠️ Sin datos';
+                    document.getElementById('apiStatus').style.color = '#f59e0b';
+                }
+            } catch (error) {
+                console.error('❌ Error actualizando datos:', error);
+                document.getElementById('lastUpdate').textContent = 'Error de conexión';
+                document.getElementById('apiStatus').textContent = '❌ Error';
+                document.getElementById('apiStatus').style.color = '#ef4444';
+                document.getElementById('apiStatusIndicator').textContent = '❌ Error';
+                document.getElementById('apiStatusIndicator').style.color = '#ef4444';
+            }
+        }
+        
+        // Verificar estado del ESP32
+        function checkESP32Status() {
+            // Simular verificación del ESP32
+            const now = Date.now();
+            const lastESP32Update = localStorage.getItem('lastESP32Update');
+            
+            if (lastESP32Update && (now - parseInt(lastESP32Update)) < 60000) {
+                document.getElementById('esp32Status').textContent = '✅ Enviando datos';
+                document.getElementById('esp32Status').style.color = '#10b981';
+            } else {
+                document.getElementById('esp32Status').textContent = '⚠️ Sin datos recientes';
+                document.getElementById('esp32Status').style.color = '#f59e0b';
+            }
+        }
+        
+        // Actualizar cada 15 segundos
+        updateData();
+        setInterval(updateData, 15000);
+        setInterval(checkESP32Status, 5000);
+        
+        console.log('✅ Sistema de actualización iniciado');
+        console.log('🎯 Dashboard + API unificados en Vercel');
+        console.log('🚀 Sin redirección DNS - Problema resuelto definitivamente');
+    </script>
+</body>
+</html>
