@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PESA INTELIGENTE - Dashboard</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="logo"><i class="fas fa-weight-hanging"></i></div>
+                    <div class="header-info">
+                        <h1>PESA INTELIGENTE</h1>
+                        <p>Dashboard Unificado Vercel</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="client-info">
+                        <p><strong>Cliente:</strong> CLI3U0KM7I1</p>
+                        <p><strong>Báscula:</strong> BSCWSBNSJBD</p>
+                    </div>
+                    <div class="status-badges">
+                        <i class="fas fa-wifi status-icon connected"></i>
+                        <span id="dataSourceBadge" class="badge badge-vercel">Vercel Unificado</span>
+                        <i class="fas fa-check-circle status-icon connected"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="main-content">
+            <div class="dashboard-grid">
+                <!-- Medidor Principal -->
+                <div class="card gauge-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-tachometer-alt"></i> Nivel de Gas</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="gauge-container">
+                            <svg class="gauge-svg" viewBox="0 0 200 100">
+                                <path d="M 20 80 A 80 80 0 0 1 180 80" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+                                <path id="gaugeProgress" d="M 20 80 A 80 80 0 0 1 180 80" fill="none" stroke="#10b981" stroke-width="12" stroke-linecap="round"/>
+                            </svg>
+                            <div class="gauge-center">
+                                <div id="gasPercentage" class="gauge-value">0%</div>
+                                <div class="gauge-label">Disponible</div>
+                            </div>
+                        </div>
+                        <div class="status-indicators">
+                            <div class="status-item">
+                                <i class="fas fa-weight"></i>
+                                <span>Peso Total: <strong id="totalWeight">0.00 kg</strong></span>
+                            </div>
+                            <div class="status-item">
+                                <i class="fas fa-flask"></i>
+                                <span>Peso Neto: <strong id="netWeight">0.00 kg</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Digital -->
+                <div class="card digital-display">
+                    <div class="card-header">
+                        <h2>Peso Neto Actual</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="digital-value">
+                            <span id="digitalWeight">0.00</span>
+                            <span class="unit">kg</span>
+                        </div>
+                        <div class="weight-details">
+                            <div class="detail-row">
+                                <span>Peso Total:</span>
+                                <span id="detailTotal">0.00 kg</span>
+                            </div>
+                            <div class="detail-row">
+                                <span>Cilindro Vacío:</span>
+                                <span id="detailEmpty">5.00 kg</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/dashboard.js"></script>
+</body>
+</html>
