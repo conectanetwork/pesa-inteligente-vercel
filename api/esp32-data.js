@@ -1,10 +1,11 @@
-// Variable global para almacenar los últimos datos del ESP32
+// Variable global para almacenar datos del ESP32
 if (!global.latestESP32Data) {
   global.latestESP32Data = null;
+  console.log('🔥 [ESP32-DATA] Variable global inicializada');
 }
 
 export default function handler(req, res) {
-  // Configurar CORS
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -18,29 +19,32 @@ export default function handler(req, res) {
       const data = req.body;
       const timestamp = new Date().toISOString();
       
-      console.log('📡 [ESP32-DATA] Datos recibidos del ESP32:', data);
-      console.log('📡 [ESP32-DATA] Peso recibido:', data.weight, 'kg');
+      console.log('🔥 [ESP32-DATA] ===== DATOS RECIBIDOS =====');
+      console.log('🔥 [ESP32-DATA] Peso recibido:', data.weight, 'kg');
+      console.log('🔥 [ESP32-DATA] Cliente:', data.clientCode);
+      console.log('🔥 [ESP32-DATA] Báscula:', data.scaleCode);
+      console.log('🔥 [ESP32-DATA] Timestamp:', timestamp);
       
-      // Verificar que tenemos los datos necesarios
+      // Verificar datos básicos
       if (!data.weight || !data.clientCode || !data.scaleCode) {
-        console.error('❌ [ESP32-DATA] Datos incompletos:', data);
+        console.error('❌ [ESP32-DATA] DATOS INCOMPLETOS');
         return res.status(400).json({
           success: false,
           error: 'Datos incompletos'
         });
       }
       
-      // Verificar autenticación
+      // Verificar credenciales
       if (data.clientCode !== 'CLI3U0KM7I1' || data.scaleCode !== 'BSCWSBNSJBD') {
-        console.error('❌ [ESP32-DATA] Credenciales inválidas');
+        console.error('❌ [ESP32-DATA] CREDENCIALES INVÁLIDAS');
         return res.status(401).json({
           success: false,
           error: 'Credenciales inválidas'
         });
       }
       
-      // ALMACENAR DATOS REALES DEL ESP32 EN VARIABLE GLOBAL
-      global.latestESP32Data = {
+      // ALMACENAR EN VARIABLE GLOBAL
+      const storedData = {
         weight: parseFloat(data.weight),
         timestamp: timestamp,
         clientCode: data.clientCode,
@@ -52,21 +56,27 @@ export default function handler(req, res) {
         free_heap: data.free_heap || null
       };
       
-      console.log('✅ [ESP32-DATA] Datos almacenados globalmente:', global.latestESP32Data);
-      console.log('✅ [ESP32-DATA] Peso almacenado:', global.latestESP32Data.weight, 'kg');
+      global.latestESP32Data = storedData;
       
+      console.log('🔥 [ESP32-DATA] ===== ALMACENADO EN GLOBAL =====');
+      console.log('🔥 [ESP32-DATA] global.latestESP32Data:', JSON.stringify(global.latestESP32Data, null, 2));
+      console.log('🔥 [ESP32-DATA] Peso almacenado:', global.latestESP32Data.weight, 'kg');
+      console.log('🔥 [ESP32-DATA] Variable global existe:', !!global.latestESP32Data);
+      
+      // RESPUESTA EXITOSA
       return res.status(200).json({
         success: true,
         message: 'Datos recibidos correctamente',
-        data: global.latestESP32Data,
+        data: storedData,
         debug: {
           stored_weight: global.latestESP32Data.weight,
-          timestamp: timestamp
+          timestamp: timestamp,
+          global_variable_exists: !!global.latestESP32Data
         }
       });
       
     } catch (error) {
-      console.error('❌ [ESP32-DATA] Error procesando datos:', error);
+      console.error('❌ [ESP32-DATA] ERROR:', error);
       return res.status(500).json({
         success: false,
         error: error.message
@@ -75,6 +85,6 @@ export default function handler(req, res) {
   }
   
   return res.status(405).json({ 
-    error: 'Método no permitido. Use POST para enviar datos del ESP32.' 
+    error: 'Método no permitido. Use POST.' 
   });
 }
