@@ -1,3 +1,8 @@
+import { writeFileSync, existsSync, readFileSync } from 'fs';
+import { join } from 'path';
+
+const DATA_FILE = '/tmp/pesa-config.json';
+
 export default function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -11,43 +16,50 @@ export default function handler(req, res) {
     try {
       const { clientCode, scaleCode, empty_weight, full_weight } = req.body;
       
-      console.log('⚙️ [UPDATE-CONFIG] Datos recibidos:', req.body);
-      console.log('⚙️ [UPDATE-CONFIG] empty_weight:', empty_weight);
-      console.log('⚙️ [UPDATE-CONFIG] full_weight:', full_weight);
+      console.log('⚙️ [UPDATE-CONFIG] Guardando en archivo:', { empty_weight, full_weight });
       
       if (clientCode !== 'CLI3U0KM7I1' || scaleCode !== 'BSCWSBNSJBD') {
-        console.log('⚙️ [UPDATE-CONFIG] ❌ Credenciales inválidas');
         return res.status(401).json({ success: false, error: 'Credenciales inválidas' });
       }
       
       if (!empty_weight || !full_weight || empty_weight >= full_weight) {
-        console.log('⚙️ [UPDATE-CONFIG] ❌ Pesos inválidos');
         return res.status(400).json({
           success: false,
           error: 'Pesos inválidos. El peso lleno debe ser mayor que el peso vacío.'
         });
       }
       
-      // Forzar inicialización de variables globales
-      if (!global.currentConfig) {
-        global.currentConfig = {};
+      // Leer datos existentes
+      let allData = { esp32: null, config: null };
+      if (existsSync(DATA_FILE)) {
+        try {
+          const fileContent = readFileSync(DATA_FILE, 'utf8');
+          allData = JSON.parse(fileContent);
+        } catch (e) {
+          console.log('⚙️ [UPDATE-CONFIG] Creando nuevo archivo');
+        }
       }
       
-      // Guardar configuración
-      global.currentConfig = {
+      // Actualizar configuración
+      allData.config = {
         empty_weight: parseFloat(empty_weight),
         full_weight: parseFloat(full_weight),
         configured_at: new Date().toISOString(),
         configured_by: 'CLIENT'
       };
       
-      console.log('✅ [UPDATE-CONFIG] Configuración guardada:', global.currentConfig);
+      // Guardar en archivo
+      writeFileSync(DATA_FILE, JSON.stringify(allData, null, 2));
+      
+      console.log('✅ [UPDATE-CONFIG] Configuración guardada en archivo:', allData.config);
+      console.log('✅ [UPDATE-CONFIG] Archivo guardado en:', DATA_FILE);
       
       return res.status(200).json({
         success: true,
-        message: 'Configuración guardada correctamente',
-        config: global.currentConfig,
-        timestamp: new Date().toISOString()
+        message: 'Configuración guardada en archivo correctamente',
+        config: allData.config,
+        timestamp: new Date().toISOString(),
+        file_path: DATA_FILE
       });
       
     } catch (error) {
