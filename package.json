@@ -1,6 +1,6 @@
 {
   "name": "pesa-inteligente-vercel",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "engines": {
     "node": "18.x"
   }
