@@ -1,3 +1,7 @@
+import { writeFileSync, readFileSync, existsSync } from 'fs';
+
+const DATA_FILE = '/tmp/pesa-config.json';
+
 export default function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -28,8 +32,7 @@ export default function handler(req, res) {
         });
       }
       
-      // Forzar inicialización
-      global.latestESP32Data = {
+      const esp32Data = {
         weight: parseFloat(data.weight),
         timestamp: timestamp,
         clientCode: data.clientCode,
@@ -38,15 +41,36 @@ export default function handler(req, res) {
         received_at: timestamp
       };
       
-      console.log('🔥 [ESP32-DATA] ALMACENADO:', global.latestESP32Data.weight, 'kg');
+      // Guardar en variable global (fallback)
+      global.latestESP32Data = esp32Data;
+      
+      // Leer datos existentes del archivo
+      let allData = { esp32: null, config: null };
+      if (existsSync(DATA_FILE)) {
+        try {
+          const fileContent = readFileSync(DATA_FILE, 'utf8');
+          allData = JSON.parse(fileContent);
+        } catch (e) {
+          console.log('🔥 [ESP32-DATA] Creando nuevo archivo');
+        }
+      }
+      
+      // Actualizar datos ESP32
+      allData.esp32 = esp32Data;
+      
+      // Guardar en archivo
+      writeFileSync(DATA_FILE, JSON.stringify(allData, null, 2));
+      
+      console.log('🔥 [ESP32-DATA] GUARDADO en archivo:', esp32Data.weight, 'kg');
       
       return res.status(200).json({
         success: true,
         message: 'Datos recibidos correctamente',
-        data: global.latestESP32Data,
+        data: esp32Data,
         debug: {
-          stored_weight: global.latestESP32Data.weight,
-          timestamp: timestamp
+          stored_weight: esp32Data.weight,
+          timestamp: timestamp,
+          file_saved: true
         }
       });
       
