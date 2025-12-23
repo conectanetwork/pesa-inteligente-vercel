@@ -1,7 +1,3 @@
-import { readFileSync, existsSync } from 'fs';
-
-const DATA_FILE = '/tmp/pesa-config.json';
-
 export default function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -13,32 +9,20 @@ export default function handler(req, res) {
   
   if (req.method === 'GET') {
     try {
-      const { clientCode, scaleCode } = req.query;
+      const { clientCode, scaleCode, empty_weight, full_weight } = req.query;
       
-      console.log('🔥 [WEIGHT-DATA] Leyendo desde archivo:', DATA_FILE);
-      console.log('🔥 [WEIGHT-DATA] Archivo existe:', existsSync(DATA_FILE));
+      console.log('🔥 [WEIGHT-DATA] === CONSULTA CON PARÁMETROS ===');
+      console.log('🔥 [WEIGHT-DATA] empty_weight:', empty_weight);
+      console.log('🔥 [WEIGHT-DATA] full_weight:', full_weight);
+      console.log('🔥 [WEIGHT-DATA] ESP32 data exists:', !!global.latestESP32Data);
       
       if (clientCode !== 'CLI3U0KM7I1' || scaleCode !== 'BSCWSBNSJBD') {
         return res.status(401).json({ success: false, error: 'Credenciales inválidas' });
       }
       
-      // Leer datos del archivo
-      let allData = { esp32: null, config: null };
-      if (existsSync(DATA_FILE)) {
-        try {
-          const fileContent = readFileSync(DATA_FILE, 'utf8');
-          allData = JSON.parse(fileContent);
-          console.log('🔥 [WEIGHT-DATA] Datos leídos del archivo:', allData);
-        } catch (e) {
-          console.log('🔥 [WEIGHT-DATA] Error leyendo archivo:', e.message);
-        }
-      } else {
-        console.log('🔥 [WEIGHT-DATA] Archivo no existe');
-      }
-      
-      // Verificar configuración
-      if (!allData.config) {
-        console.log('🔥 [WEIGHT-DATA] ❌ NO HAY CONFIGURACIÓN EN ARCHIVO');
+      // Verificar configuración desde parámetros
+      if (!empty_weight || !full_weight) {
+        console.log('🔥 [WEIGHT-DATA] ❌ NO HAY CONFIGURACIÓN EN PARÁMETROS');
         return res.status(200).json({
           success: true,
           data: {
@@ -58,22 +42,16 @@ export default function handler(req, res) {
         });
       }
       
-      // Verificar datos ESP32 (usar variable global como fallback)
-      let esp32Data = allData.esp32;
-      if (!esp32Data && global.latestESP32Data) {
-        esp32Data = global.latestESP32Data;
-        console.log('🔥 [WEIGHT-DATA] Usando datos ESP32 de variable global');
-      }
-      
-      if (!esp32Data) {
+      // Verificar datos ESP32
+      if (!global.latestESP32Data) {
         console.log('🔥 [WEIGHT-DATA] ❌ NO HAY DATOS ESP32');
         return res.status(200).json({
           success: true,
           data: {
             current: {
               weight: 0,
-              empty_weight: allData.config.empty_weight,
-              full_weight: allData.config.full_weight,
+              empty_weight: parseFloat(empty_weight),
+              full_weight: parseFloat(full_weight),
               net_weight: 0,
               gas_percentage: 0,
               timestamp: new Date().toISOString()
@@ -87,16 +65,16 @@ export default function handler(req, res) {
       }
       
       // CALCULAR con datos reales
-      const totalWeight = esp32Data.weight;
-      const emptyWeight = allData.config.empty_weight;
-      const fullWeight = allData.config.full_weight;
-      const netWeight = Math.max(0, totalWeight - emptyWeight);
-      const capacity = fullWeight - emptyWeight;
+      const totalWeight = global.latestESP32Data.weight;
+      const emptyWeightNum = parseFloat(empty_weight);
+      const fullWeightNum = parseFloat(full_weight);
+      const netWeight = Math.max(0, totalWeight - emptyWeightNum);
+      const capacity = fullWeightNum - emptyWeightNum;
       const gasPercentage = capacity > 0 ? Math.min(100, Math.max(0, (netWeight / capacity) * 100)) : 0;
       
       console.log('🔥 [WEIGHT-DATA] === CÁLCULO FINAL ===');
       console.log('🔥 [WEIGHT-DATA] Total:', totalWeight, 'kg');
-      console.log('🔥 [WEIGHT-DATA] Vacío:', emptyWeight, 'kg');
+      console.log('🔥 [WEIGHT-DATA] Vacío:', emptyWeightNum, 'kg');
       console.log('🔥 [WEIGHT-DATA] Neto:', netWeight, 'kg');
       console.log('🔥 [WEIGHT-DATA] Porcentaje:', gasPercentage, '%');
       
@@ -105,25 +83,24 @@ export default function handler(req, res) {
         data: {
           current: {
             weight: totalWeight,
-            empty_weight: emptyWeight,
-            full_weight: fullWeight,
+            empty_weight: emptyWeightNum,
+            full_weight: fullWeightNum,
             net_weight: netWeight,
             gas_percentage: gasPercentage,
-            timestamp: esp32Data.timestamp
+            timestamp: global.latestESP32Data.timestamp
           },
-          esp32_timestamp: esp32Data.timestamp,
+          esp32_timestamp: global.latestESP32Data.timestamp,
           has_real_data: true,
-          data_source: 'ESP32_REAL_WITH_FILE_CONFIG',
+          data_source: 'ESP32_REAL_WITH_PARAM_CONFIG',
           historical: []
         },
         debug: {
           esp32_weight: totalWeight,
-          config_empty: emptyWeight,
-          config_full: fullWeight,
+          config_empty: emptyWeightNum,
+          config_full: fullWeightNum,
           calculated_net: netWeight,
           calculated_percentage: gasPercentage,
-          file_exists: existsSync(DATA_FILE),
-          config_from_file: !!allData.config
+          config_source: 'URL_PARAMETERS'
         }
       });
       
@@ -135,4 +112,3 @@ export default function handler(req, res) {
   
   return res.status(405).json({ error: 'Método no permitido.' });
 }
-
