@@ -1,7 +1,6 @@
-// Variable global SOLO para configuración del cliente
-if (!global.currentConfig) {
-  global.currentConfig = null; // NO valores por defecto
-}
+import { writeFileSync, readFileSync, existsSync } from 'fs';
+
+const DATA_FILE = '/tmp/esp32-data.json';
 
 export default function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,9 +15,7 @@ export default function handler(req, res) {
     try {
       const { clientCode, scaleCode, empty_weight, full_weight } = req.body;
       
-      console.log('⚙️ [UPDATE-CONFIG] === CONFIGURACIÓN DEL CLIENTE ===');
-      console.log('⚙️ [UPDATE-CONFIG] Configuración anterior:', global.currentConfig);
-      console.log('⚙️ [UPDATE-CONFIG] Nueva configuración del cliente:', { empty_weight, full_weight });
+      console.log('⚙️ [UPDATE-CONFIG] Configuración recibida:', { empty_weight, full_weight });
       
       if (clientCode !== 'CLI3U0KM7I1' || scaleCode !== 'BSCWSBNSJBD') {
         return res.status(401).json({ success: false, error: 'Credenciales inválidas' });
@@ -31,27 +28,39 @@ export default function handler(req, res) {
         });
       }
       
-      // GUARDAR CONFIGURACIÓN DEL CLIENTE
-      global.currentConfig = {
+      // Leer datos existentes
+      let allData = { esp32: null, config: null };
+      if (existsSync(DATA_FILE)) {
+        try {
+          const fileContent = readFileSync(DATA_FILE, 'utf8');
+          allData = JSON.parse(fileContent);
+        } catch (e) {
+          console.log('⚙️ [UPDATE-CONFIG] Creando nuevo archivo');
+        }
+      }
+      
+      // Actualizar configuración
+      allData.config = {
         empty_weight: parseFloat(empty_weight),
         full_weight: parseFloat(full_weight),
         configured_at: new Date().toISOString(),
         configured_by: 'CLIENT'
       };
       
-      console.log('✅ [UPDATE-CONFIG] Configuración del CLIENTE guardada:', global.currentConfig);
-      console.log('✅ [UPDATE-CONFIG] Ahora weight-data.js usará SOLO estos valores del cliente');
+      // Guardar en archivo
+      writeFileSync(DATA_FILE, JSON.stringify(allData, null, 2));
+      
+      console.log('✅ [UPDATE-CONFIG] Configuración guardada en archivo:', allData.config);
       
       return res.status(200).json({
         success: true,
-        message: 'Configuración del cliente guardada correctamente',
+        message: 'Configuración guardada correctamente',
         config: {
           empty_weight: parseFloat(empty_weight),
           full_weight: parseFloat(full_weight),
           capacity: parseFloat(full_weight) - parseFloat(empty_weight)
         },
-        timestamp: new Date().toISOString(),
-        note: 'Los cálculos ahora usarán únicamente esta configuración del cliente'
+        timestamp: new Date().toISOString()
       });
       
     } catch (error) {
