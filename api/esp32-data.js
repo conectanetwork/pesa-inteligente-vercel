@@ -87,3 +87,4 @@ export default function handler(req, res) {
     error: 'Método no permitido. Use POST.' 
   });
 }
+
