@@ -517,7 +517,7 @@
                 updateDebugInfo('Consultando API con configuración...');
                 
                 // Construir URL con parámetros de configuración
-                const url = `/api/weight-data?clientCode=CLI3U0KM7I1&scaleCode=BSCWSBNSJBD&empty_weight=${currentConfig.empty_weight}&full_weight=${currentConfig.full_weight}&t=${Date.now()}`;
+                const url =  `/api/weight-data-fixed?clientCode=CLI3U0KM7I1&scaleCode=BSCWSBNSJBD&empty_weight=${currentConfig.empty_weight}&full_weight=${currentConfig.full_weight}&t=${Date.now()}`;
                 
                 console.log('🔍 Consultando:', url);
                 console.log('🔍 Configuración actual:', currentConfig);
