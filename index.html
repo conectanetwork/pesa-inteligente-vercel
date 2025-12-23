@@ -1,179 +1,21 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PESA INTELIGENTE - Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f2f5; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .card { background: white; padding: 20px; margin: 20px 0; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
-        .btn-primary { background: #3b82f6; color: white; }
-        .btn-success { background: #10b981; color: white; }
-        .form-group { margin: 15px 0; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; }
-        .status { padding: 15px; margin: 10px 0; border-radius: 5px; }
-        .status-success { background: #d1fae5; color: #065f46; }
-        .status-error { background: #fee2e2; color: #991b1b; }
-        .data-display { font-size: 24px; text-align: center; padding: 20px; background: #000; color: #00ff00; border-radius: 10px; font-family: monospace; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="card">
-            <h1>⚖️ PESA INTELIGENTE - Dashboard con Configuración Directa</h1>
-            <p><strong>Cliente:</strong> CLI3U0KM7I1 | <strong>Báscula:</strong> BSCWSBNSJBD</p>
-        </div>
+<!-- Solo la parte importante para la consulta usando parámetros -->
 
-        <div class="card">
-            <h2>📊 Datos Actuales</h2>
-            <div class="data-display" id="dataDisplay">
-                Cargando datos...
-            </div>
-            <div id="statusInfo" class="status">
-                🔄 Verificando conexión...
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>⚙️ Configuración de Pesos</h2>
-            <div class="form-group">
-                <label>Peso Cilindro Vacío (kg):</label>
-                <input type="number" id="emptyWeight" step="0.1" value="5.0">
-            </div>
-            <div class="form-group">
-                <label>Peso Cilindro Lleno (kg):</label>
-                <input type="number" id="fullWeight" step="0.1" value="10.0">
-            </div>
-            <button class="btn btn-success" onclick="saveConfig()">💾 Guardar Configuración</button>
-            <div id="configResult"></div>
-        </div>
-
-        <div class="card">
-            <h2>🔍 Información del Sistema</h2>
-            <button class="btn btn-primary" onclick="checkData()">🔄 Actualizar Datos</button>
-            <div id="debugInfo" style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; font-family: monospace; font-size: 12px;">
-                Presiona "Actualizar Datos" para ver el estado
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Configuración local
-        let currentConfig = {
-            empty_weight: 5.0,
-            full_weight: 10.0
-        };
+<script>
+    async function checkData() {
+        const emptyWeight = 5; // Aquí pon el valor configurado
+        const fullWeight = 10; // Aquí pon el valor configurado
         
-        // Cargar configuración del localStorage
-        function loadConfig() {
-            const stored = localStorage.getItem('pesa_config');
-            if (stored) {
-                currentConfig = JSON.parse(stored);
-                document.getElementById('emptyWeight').value = currentConfig.empty_weight;
-                document.getElementById('fullWeight').value = currentConfig.full_weight;
-            }
-        }
+        const url = `/api/weight-data?clientCode=CLI3U0KM7I1&scaleCode=BSCWSBNSJBD&empty_weight=${emptyWeight}&full_weight=${fullWeight}&t=${Date.now()}`;
         
-        // Guardar configuración
-        function saveConfig() {
-            const emptyWeight = parseFloat(document.getElementById('emptyWeight').value);
-            const fullWeight = parseFloat(document.getElementById('fullWeight').value);
-            
-            if (isNaN(emptyWeight) || isNaN(fullWeight)) {
-                document.getElementById('configResult').innerHTML = '<div class="status status-error">❌ Por favor ingrese valores numéricos válidos</div>';
-                return;
-            }
-            
-            if (emptyWeight >= fullWeight) {
-                document.getElementById('configResult').innerHTML = '<div class="status status-error">❌ El peso lleno debe ser mayor que el peso vacío</div>';
-                return;
-            }
-            
-            // Guardar en localStorage
-            currentConfig = {
-                empty_weight: emptyWeight,
-                full_weight: fullWeight
-            };
-            
-            localStorage.setItem('pesa_config', JSON.stringify(currentConfig));
-            
-            document.getElementById('configResult').innerHTML = '<div class="status status-success">✅ Configuración guardada localmente</div>';
-            
-            // Actualizar datos inmediatamente
-            setTimeout(checkData, 1000);
-        }
+        const response = await fetch(url);
+        const data = await response.json();
         
-        // Función para verificar datos CON configuración incluida
-        async function checkData() {
-            try {
-                document.getElementById('debugInfo').textContent = '🔄 Consultando datos con configuración...';
-                
-                // Incluir configuración en la URL
-                const url = `/api/weight-data?clientCode=CLI3U0KM7I1&scaleCode=BSCWSBNSJBD&empty_weight=${currentConfig.empty_weight}&full_weight=${currentConfig.full_weight}&t=${Date.now()}`;
-                
-                console.log('🔍 DEBUG: Consultando con configuración:', currentConfig);
-                console.log('🔍 DEBUG: URL:', url);
-                
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                console.log('📥 Respuesta API:', data);
-                
-                if (data.success && data.data.current) {
-                    const current = data.data.current;
-                    
-                    // Mostrar datos principales
-                    document.getElementById('dataDisplay').innerHTML = 
-                        `Peso Total: ${current.weight.toFixed(2)} kg<br>` +
-                        `Peso Neto: ${current.net_weight.toFixed(2)} kg<br>` +
-                        `Gas: ${current.gas_percentage.toFixed(1)}%`;
-                    
-                    // Mostrar estado
-                    if (data.data.has_real_data) {
-                        document.getElementById('statusInfo').innerHTML = '✅ Recibiendo datos reales del ESP32';
-                        document.getElementById('statusInfo').className = 'status status-success';
-                    } else {
-                        document.getElementById('statusInfo').innerHTML = '⚠️ ' + (data.data.message || 'Sin datos del ESP32');
-                        document.getElementById('statusInfo').className = 'status status-error';
-                    }
-                    
-                    // Mostrar información de debug
-                    const debugMsg = `${data.data.data_source}: ${current.weight.toFixed(2)}kg → ${current.net_weight.toFixed(2)}kg → ${current.gas_percentage.toFixed(1)}%`;
-                    document.getElementById('debugInfo').innerHTML = 
-                        `<strong>🔍 Debug:</strong> ${debugMsg}<br>` +
-                        `<strong>Estado:</strong> ${data.data.data_source}<br>` +
-                        `<strong>Peso ESP32:</strong> ${current.weight} kg<br>` +
-                        `<strong>Configuración:</strong> Vacío=${current.empty_weight}kg, Lleno=${current.full_weight}kg<br>` +
-                        `<strong>Cálculo:</strong> ${current.weight} - ${current.empty_weight} = ${current.net_weight} kg<br>` +
-                        `<strong>Porcentaje:</strong> ${current.gas_percentage.toFixed(1)}%<br>` +
-                        `<strong>Timestamp:</strong> ${new Date(current.timestamp).toLocaleString()}`;
-                        
-                    console.log('🔍 DEBUG:', debugMsg);
-                } else {
-                    document.getElementById('dataDisplay').textContent = 'Sin datos disponibles';
-                    document.getElementById('statusInfo').innerHTML = '❌ Error obteniendo datos';
-                    document.getElementById('statusInfo').className = 'status status-error';
-                    document.getElementById('debugInfo').textContent = 'Error: ' + JSON.stringify(data, null, 2);
-                }
-            } catch (error) {
-                document.getElementById('dataDisplay').textContent = 'Error de conexión';
-                document.getElementById('statusInfo').innerHTML = '❌ Error de conexión';
-                document.getElementById('statusInfo').className = 'status status-error';
-                document.getElementById('debugInfo').textContent = 'Error: ' + error.message;
-            }
-        }
-        
-        // Cargar datos al iniciar
-        document.addEventListener('DOMContentLoaded', function() {
-            loadConfig();
-            checkData();
-            // Actualizar cada 10 segundos
-            setInterval(checkData, 10000);
-        });
-    </script>
-</body>
-</html>
-<!-- Deploy fix: 2025-12-23 01:40 - Force update of all APIs -->
+        console.log('Datos recibidos:', data);
+        // Aquí actualiza el UI usando data.data.current para mostrar peso, neto, % gas
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        checkData();
+        setInterval(checkData, 10000);
+    });
+</script>
