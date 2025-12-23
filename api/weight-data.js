@@ -12,8 +12,7 @@ export default function handler(req, res) {
       const { clientCode, scaleCode, empty_weight, full_weight } = req.query;
       
       console.log('🔥 [WEIGHT-DATA] === CONSULTA CON PARÁMETROS ===');
-      console.log('🔥 [WEIGHT-DATA] empty_weight:', empty_weight);
-      console.log('🔥 [WEIGHT-DATA] full_weight:', full_weight);
+      console.log('🔥 [WEIGHT-DATA] Parámetros recibidos:', { empty_weight, full_weight });
       console.log('🔥 [WEIGHT-DATA] ESP32 data exists:', !!global.latestESP32Data);
       
       if (clientCode !== 'CLI3U0KM7I1' || scaleCode !== 'BSCWSBNSJBD') {
@@ -35,37 +34,27 @@ export default function handler(req, res) {
               timestamp: new Date().toISOString()
             },
             has_real_data: false,
-            data_source: 'NO_CONFIG',
-            needs_configuration: true,
-            message: 'Configure los pesos del cilindro vacío y lleno primero'
+            data_source: 'NO_PARAMS',
+            message: 'Faltan parámetros empty_weight y full_weight en la URL'
           }
         });
       }
       
-      // Verificar datos ESP32
-      if (!global.latestESP32Data) {
-        console.log('🔥 [WEIGHT-DATA] ❌ NO HAY DATOS ESP32');
-        return res.status(200).json({
-          success: true,
-          data: {
-            current: {
-              weight: 0,
-              empty_weight: parseFloat(empty_weight),
-              full_weight: parseFloat(full_weight),
-              net_weight: 0,
-              gas_percentage: 0,
-              timestamp: new Date().toISOString()
-            },
-            has_real_data: false,
-            data_source: 'NO_ESP32_DATA',
-            needs_esp32_data: true,
-            message: 'Esperando datos del ESP32'
-          }
-        });
+      // Usar datos del ESP32 o valor por defecto
+      let totalWeight = 9.89; // Valor por defecto basado en tus logs
+      let hasRealData = false;
+      let timestamp = new Date().toISOString();
+      
+      if (global.latestESP32Data && global.latestESP32Data.weight) {
+        totalWeight = global.latestESP32Data.weight;
+        hasRealData = true;
+        timestamp = global.latestESP32Data.timestamp;
+        console.log('🔥 [WEIGHT-DATA] ✅ Usando datos REALES del ESP32:', totalWeight, 'kg');
+      } else {
+        console.log('🔥 [WEIGHT-DATA] ⚠️ Usando valor por DEFECTO:', totalWeight, 'kg');
       }
       
-      // CALCULAR con datos reales
-      const totalWeight = global.latestESP32Data.weight;
+      // CALCULAR con configuración de parámetros
       const emptyWeightNum = parseFloat(empty_weight);
       const fullWeightNum = parseFloat(full_weight);
       const netWeight = Math.max(0, totalWeight - emptyWeightNum);
@@ -74,9 +63,10 @@ export default function handler(req, res) {
       
       console.log('🔥 [WEIGHT-DATA] === CÁLCULO FINAL ===');
       console.log('🔥 [WEIGHT-DATA] Total:', totalWeight, 'kg');
-      console.log('🔥 [WEIGHT-DATA] Vacío:', emptyWeightNum, 'kg');
-      console.log('🔥 [WEIGHT-DATA] Neto:', netWeight, 'kg');
-      console.log('🔥 [WEIGHT-DATA] Porcentaje:', gasPercentage, '%');
+      console.log('🔥 [WEIGHT-DATA] Vacío (param):', emptyWeightNum, 'kg');
+      console.log('🔥 [WEIGHT-DATA] Lleno (param):', fullWeightNum, 'kg');
+      console.log('🔥 [WEIGHT-DATA] Neto calculado:', netWeight, 'kg');
+      console.log('🔥 [WEIGHT-DATA] Porcentaje gas:', gasPercentage, '%');
       
       return res.status(200).json({
         success: true,
@@ -87,11 +77,11 @@ export default function handler(req, res) {
             full_weight: fullWeightNum,
             net_weight: netWeight,
             gas_percentage: gasPercentage,
-            timestamp: global.latestESP32Data.timestamp
+            timestamp: timestamp
           },
-          esp32_timestamp: global.latestESP32Data.timestamp,
-          has_real_data: true,
-          data_source: 'ESP32_REAL_WITH_PARAM_CONFIG',
+          esp32_timestamp: timestamp,
+          has_real_data: hasRealData,
+          data_source: hasRealData ? 'ESP32_REAL_WITH_PARAMS' : 'DEFAULT_WITH_PARAMS',
           historical: []
         },
         debug: {
@@ -100,7 +90,8 @@ export default function handler(req, res) {
           config_full: fullWeightNum,
           calculated_net: netWeight,
           calculated_percentage: gasPercentage,
-          config_source: 'URL_PARAMETERS'
+          config_source: 'URL_PARAMETERS',
+          data_origin: hasRealData ? 'ESP32_REAL' : 'DEFAULT_VALUE'
         }
       });
       
@@ -110,6 +101,5 @@ export default function handler(req, res) {
     }
   }
   
-  return res.status(405).json({ error: 'Método no permitido.' });
+  return res.status(405).json({ error: 'Método no permitido. Use GET con parámetros.' });
 }
-
