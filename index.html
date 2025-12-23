@@ -23,7 +23,7 @@
 <body>
     <div class="container">
         <div class="card">
-            <h1>⚖️ PESA INTELIGENTE - Dashboard Simple</h1>
+            <h1>⚖️ PESA INTELIGENTE - Dashboard con Configuración Directa</h1>
             <p><strong>Cliente:</strong> CLI3U0KM7I1 | <strong>Báscula:</strong> BSCWSBNSJBD</p>
         </div>
 
@@ -61,8 +61,24 @@
     </div>
 
     <script>
-        // Función para guardar configuración
-        async function saveConfig() {
+        // Configuración local
+        let currentConfig = {
+            empty_weight: 5.0,
+            full_weight: 10.0
+        };
+        
+        // Cargar configuración del localStorage
+        function loadConfig() {
+            const stored = localStorage.getItem('pesa_config');
+            if (stored) {
+                currentConfig = JSON.parse(stored);
+                document.getElementById('emptyWeight').value = currentConfig.empty_weight;
+                document.getElementById('fullWeight').value = currentConfig.full_weight;
+            }
+        }
+        
+        // Guardar configuración
+        function saveConfig() {
             const emptyWeight = parseFloat(document.getElementById('emptyWeight').value);
             const fullWeight = parseFloat(document.getElementById('fullWeight').value);
             
@@ -76,44 +92,35 @@
                 return;
             }
             
-            try {
-                document.getElementById('configResult').innerHTML = '<div class="status">🔄 Guardando configuración...</div>';
-                
-                const response = await fetch('/api/update-config', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        clientCode: 'CLI3U0KM7I1',
-                        scaleCode: 'BSCWSBNSJBD',
-                        empty_weight: emptyWeight,
-                        full_weight: fullWeight
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    document.getElementById('configResult').innerHTML = '<div class="status status-success">✅ Configuración guardada exitosamente</div>';
-                    setTimeout(checkData, 2000); // Actualizar datos después de 2 segundos
-                } else {
-                    document.getElementById('configResult').innerHTML = '<div class="status status-error">❌ Error: ' + result.error + '</div>';
-                }
-            } catch (error) {
-                document.getElementById('configResult').innerHTML = '<div class="status status-error">❌ Error de conexión: ' + error.message + '</div>';
-            }
+            // Guardar en localStorage
+            currentConfig = {
+                empty_weight: emptyWeight,
+                full_weight: fullWeight
+            };
+            
+            localStorage.setItem('pesa_config', JSON.stringify(currentConfig));
+            
+            document.getElementById('configResult').innerHTML = '<div class="status status-success">✅ Configuración guardada localmente</div>';
+            
+            // Actualizar datos inmediatamente
+            setTimeout(checkData, 1000);
         }
         
-        // Función para verificar datos
+        // Función para verificar datos CON configuración incluida
         async function checkData() {
             try {
-                document.getElementById('debugInfo').textContent = '🔄 Consultando datos...';
+                document.getElementById('debugInfo').textContent = '🔄 Consultando datos con configuración...';
                 
-                const response = await fetch('/api/weight-data?clientCode=CLI3U0KM7I1&scaleCode=BSCWSBNSJBD&t=' + Date.now());
+                // Incluir configuración en la URL
+                const url = `/api/weight-data?clientCode=CLI3U0KM7I1&scaleCode=BSCWSBNSJBD&empty_weight=${currentConfig.empty_weight}&full_weight=${currentConfig.full_weight}&t=${Date.now()}`;
+                
+                console.log('🔍 DEBUG: Consultando con configuración:', currentConfig);
+                console.log('🔍 DEBUG: URL:', url);
+                
+                const response = await fetch(url);
                 const data = await response.json();
                 
-                console.log('Datos recibidos:', data);
+                console.log('📥 Respuesta API:', data);
                 
                 if (data.success && data.data.current) {
                     const current = data.data.current;
@@ -134,13 +141,17 @@
                     }
                     
                     // Mostrar información de debug
+                    const debugMsg = `${data.data.data_source}: ${current.weight.toFixed(2)}kg → ${current.net_weight.toFixed(2)}kg → ${current.gas_percentage.toFixed(1)}%`;
                     document.getElementById('debugInfo').innerHTML = 
+                        `<strong>🔍 Debug:</strong> ${debugMsg}<br>` +
                         `<strong>Estado:</strong> ${data.data.data_source}<br>` +
                         `<strong>Peso ESP32:</strong> ${current.weight} kg<br>` +
                         `<strong>Configuración:</strong> Vacío=${current.empty_weight}kg, Lleno=${current.full_weight}kg<br>` +
                         `<strong>Cálculo:</strong> ${current.weight} - ${current.empty_weight} = ${current.net_weight} kg<br>` +
                         `<strong>Porcentaje:</strong> ${current.gas_percentage.toFixed(1)}%<br>` +
                         `<strong>Timestamp:</strong> ${new Date(current.timestamp).toLocaleString()}`;
+                        
+                    console.log('🔍 DEBUG:', debugMsg);
                 } else {
                     document.getElementById('dataDisplay').textContent = 'Sin datos disponibles';
                     document.getElementById('statusInfo').innerHTML = '❌ Error obteniendo datos';
@@ -157,6 +168,7 @@
         
         // Cargar datos al iniciar
         document.addEventListener('DOMContentLoaded', function() {
+            loadConfig();
             checkData();
             // Actualizar cada 10 segundos
             setInterval(checkData, 10000);
