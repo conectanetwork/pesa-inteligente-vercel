@@ -5,633 +5,162 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PESA INTELIGENTE - Dashboard</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: Arial, sans-serif;
-            background: #f0f2f5;
-            color: #333;
-            padding: 20px;
-        }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        /* MEDIDOR SEMICIRCULAR */
-        .gauge-container {
-            position: relative;
-            width: 240px;
-            height: 120px;
-            margin: 30px auto;
-            background: #f8f9fa;
-            border-radius: 120px 120px 0 0;
-            overflow: hidden;
-        }
-        
-        .gauge-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        
-        .gauge-center {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            z-index: 10;
-        }
-        
-        .gauge-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #10b981;
-            margin-bottom: 5px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .gauge-label {
-            font-size: 1rem;
-            color: #666;
-            font-weight: 500;
-        }
-        
-        .digital-display {
-            text-align: center;
-            font-family: 'Courier New', monospace;
-            font-size: 2.5rem;
-            color: #2563eb;
-            margin: 20px 0;
-            background: #000;
-            color: #00ff00;
-            padding: 15px;
-            border-radius: 8px;
-            border: 2px solid #333;
-        }
-        
-        .config-section {
-            border-top: 1px solid #eee;
-            padding-top: 20px;
-            margin-top: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            margin: 5px;
-        }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f2f5; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { background: white; padding: 20px; margin: 20px 0; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
         .btn-primary { background: #3b82f6; color: white; }
         .btn-success { background: #10b981; color: white; }
-        .btn-secondary { background: #6b7280; color: white; }
-        .btn:hover { opacity: 0.9; }
-        .hidden { display: none; }
-        .alert {
-            padding: 15px;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-        .alert-success { background: #d1fae5; color: #065f46; }
-        .alert-error { background: #fee2e2; color: #991b1b; }
-        .chart-container {
-            height: 300px;
-            margin: 20px 0;
-        }
-        .status-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .status-item {
-            text-align: center;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 5px;
-        }
-        .esp32-status {
-            background: #e3f2fd;
-            border: 2px solid #2196f3;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-        }
-        .debug-info {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            font-family: monospace;
-            font-size: 12px;
-        }
+        .form-group { margin: 15px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; }
+        .status { padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .status-success { background: #d1fae5; color: #065f46; }
+        .status-error { background: #fee2e2; color: #991b1b; }
+        .data-display { font-size: 24px; text-align: center; padding: 20px; background: #000; color: #00ff00; border-radius: 10px; font-family: monospace; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>⚖️ PESA INTELIGENTE - Dashboard Corregido</h1>
-            <p>Cliente: CLI3U0KM7I1 | Báscula: BSCWSBNSJBD</p>
-            <p style="color: green;">✅ Sistema Vercel Unificado - $0 USD</p>
-            <div class="esp32-status">
-                <strong>📡 Estado ESP32:</strong> <span id="esp32ConnectionStatus">🔄 Verificando conexión...</span><br>
-                <strong>📊 Peso ESP32:</strong> <span id="lastESP32Data">Esperando datos...</span><br>
-                <strong>🕒 Última actualización:</strong> <span id="lastESP32Update">--</span>
-            </div>
-            <div class="debug-info" id="debugInfo">
-                🔍 Debug: Esperando datos...
-            </div>
-        </div>
-
-        <div class="grid">
-            <!-- Gráfico 1: Medidor Semicircular -->
-            <div class="card">
-                <h2>📊 Nivel de Gas (Gráfico 1)</h2>
-                <div class="gauge-container">
-                    <svg class="gauge-svg" viewBox="0 0 240 120">
-                        <path d="M 20 100 A 100 100 0 0 1 220 100" 
-                              fill="none" 
-                              stroke="#e2e8f0" 
-                              stroke-width="20"/>
-                        <path id="gaugeProgress" 
-                              d="M 20 100 A 100 100 0 0 1 220 100" 
-                              fill="none" 
-                              stroke="#10b981" 
-                              stroke-width="20" 
-                              stroke-linecap="round" 
-                              style="stroke-dasharray: 314.16; stroke-dashoffset: 157.08; transition: all 1s ease;"/>
-                    </svg>
-                    <div class="gauge-center">
-                        <div id="gasPercentage" class="gauge-value">0.0%</div>
-                        <div class="gauge-label">Disponible</div>
-                    </div>
-                </div>
-                
-                <div class="status-grid">
-                    <div class="status-item">
-                        <strong>Peso Total</strong><br>
-                        <span id="totalWeight" style="color: #2563eb; font-size: 1.2rem;">-- kg</span>
-                    </div>
-                    <div class="status-item">
-                        <strong>Peso Neto</strong><br>
-                        <span id="netWeight" style="color: #10b981; font-size: 1.2rem;">-- kg</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gráfico 2: Display Digital + Configuración -->
-            <div class="card">
-                <h2>🔢 Display Digital (Gráfico 2)</h2>
-                <div class="digital-display">
-                    <span id="digitalWeight">--.-</span> kg
-                </div>
-                
-                <div style="font-size: 14px; margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
-                        <span>Peso Total ESP32:</span>
-                        <span id="detailTotal">-- kg</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
-                        <span>Cilindro Vacío:</span>
-                        <span id="detailEmpty">5.00 kg</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
-                        <span>Capacidad Total:</span>
-                        <span id="detailCapacity">10.00 kg</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 5px 0;">
-                        <span>Última actualización:</span>
-                        <span id="lastUpdate">Conectando...</span>
-                    </div>
-                </div>
-
-                <!-- Configuración -->
-                <div class="config-section">
-                    <h3>⚙️ Configuración de Pesos</h3>
-                    
-                    <div id="configDisplay" style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <strong>Cilindro Vacío:</strong>
-                            <span id="configEmptyDisplay">5.0 kg</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                            <strong>Cilindro Lleno:</strong>
-                            <span id="configFullDisplay">15.0 kg</span>
-                        </div>
-                        <button id="editConfigBtn" class="btn btn-primary" style="width: 100%;">
-                            ✏️ Editar Configuración
-                        </button>
-                    </div>
-
-                    <div id="configEdit" class="hidden" style="background: #fef3c7; padding: 15px; border-radius: 5px; border: 2px solid #f59e0b;">
-                        <h4 style="margin-bottom: 15px; color: #92400e;">🔧 Editando Configuración</h4>
-                        <div class="form-group">
-                            <label>Peso Cilindro Vacío (kg):</label>
-                            <input type="number" id="emptyWeightInput" step="0.1" min="0" value="5.0">
-                        </div>
-                        <div class="form-group">
-                            <label>Peso Cilindro Lleno (kg):</label>
-                            <input type="number" id="fullWeightInput" step="0.1" min="0" value="15.0">
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button id="saveConfigBtn" class="btn btn-success" style="flex: 1;">💾 Guardar</button>
-                            <button id="cancelConfigBtn" class="btn btn-secondary" style="flex: 1;">❌ Cancelar</button>
-                        </div>
-                    </div>
-
-                    <div id="configAlert" class="alert hidden"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Gráfico 3: Curvas -->
         <div class="card">
-            <h2>📈 Gráfico de Curvas (Gráfico 3) - Últimas 24 Mediciones</h2>
-            <div class="chart-container">
-                <canvas id="weightChart"></canvas>
+            <h1>⚖️ PESA INTELIGENTE - Dashboard Simple</h1>
+            <p><strong>Cliente:</strong> CLI3U0KM7I1 | <strong>Báscula:</strong> BSCWSBNSJBD</p>
+        </div>
+
+        <div class="card">
+            <h2>📊 Datos Actuales</h2>
+            <div class="data-display" id="dataDisplay">
+                Cargando datos...
             </div>
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 15px;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; font-size: 14px;">
-                    <div><strong>Puntos de datos:</strong> <span id="dataPoints">24</span></div>
-                    <div><strong>Peso máximo:</strong> <span id="maxWeight">-- kg</span></div>
-                    <div><strong>Peso mínimo:</strong> <span id="minWeight">-- kg</span></div>
-                    <div><strong>Tendencia:</strong> <span id="trend">Calculando...</span></div>
-                </div>
+            <div id="statusInfo" class="status">
+                🔄 Verificando conexión...
             </div>
         </div>
 
-        <!-- Estado del Sistema -->
         <div class="card">
-            <h2>🔧 Estado del Sistema</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                <div class="status-item">
-                    <div>🌐 <strong>Dashboard</strong></div>
-                    <div style="color: #10b981;">✅ Funcionando</div>
-                </div>
-                <div class="status-item">
-                    <div>📡 <strong>API</strong></div>
-                    <div id="apiStatus" style="color: #f59e0b;">🔄 Verificando</div>
-                </div>
-                <div class="status-item">
-                    <div>📊 <strong>3 Gráficos</strong></div>
-                    <div style="color: #10b981;">✅ Activos</div>
-                </div>
-                <div class="status-item">
-                    <div>⚙️ <strong>Configuración</strong></div>
-                    <div id="configStatus" style="color: #10b981;">✅ Funcional</div>
-                </div>
-                <div class="status-item">
-                    <div>📡 <strong>ESP32</strong></div>
-                    <div id="esp32Status" style="color: #f59e0b;">🔄 Esperando</div>
-                </div>
-                <div class="status-item">
-                    <div>💰 <strong>Costo</strong></div>
-                    <div style="color: #10b981;">✅ $0 USD</div>
-                </div>
+            <h2>⚙️ Configuración de Pesos</h2>
+            <div class="form-group">
+                <label>Peso Cilindro Vacío (kg):</label>
+                <input type="number" id="emptyWeight" step="0.1" value="5.0">
+            </div>
+            <div class="form-group">
+                <label>Peso Cilindro Lleno (kg):</label>
+                <input type="number" id="fullWeight" step="0.1" value="10.0">
+            </div>
+            <button class="btn btn-success" onclick="saveConfig()">💾 Guardar Configuración</button>
+            <div id="configResult"></div>
+        </div>
+
+        <div class="card">
+            <h2>🔍 Información del Sistema</h2>
+            <button class="btn btn-primary" onclick="checkData()">🔄 Actualizar Datos</button>
+            <div id="debugInfo" style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; font-family: monospace; font-size: 12px;">
+                Presiona "Actualizar Datos" para ver el estado
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <script>
-        console.log('🚀 Dashboard cargado - Versión corregida');
-        
-        let weightChart = null;
-        let config = { empty_weight: 5.0, full_weight: 15.0 };
-        let lastESP32DataTime = 0;
-        let esp32DataReceived = false;
-        
-        function updateDebugInfo(message) {
-            document.getElementById('debugInfo').textContent = '🔍 Debug: ' + message;
-            console.log('🔍 DEBUG:', message);
-        }
-        
-        function loadConfig() {
-            const stored = localStorage.getItem('pesaInteligente_config');
-            if (stored) {
-                config = JSON.parse(stored);
-                updateConfigDisplay();
-            }
-        }
-        
-        function updateConfigDisplay() {
-            document.getElementById('emptyWeightInput').value = config.empty_weight;
-            document.getElementById('fullWeightInput').value = config.full_weight;
-            document.getElementById('configEmptyDisplay').textContent = config.empty_weight.toFixed(1) + ' kg';
-            document.getElementById('configFullDisplay').textContent = config.full_weight.toFixed(1) + ' kg';
-        }
-        
-        function saveConfig() {
-            localStorage.setItem('pesaInteligente_config', JSON.stringify(config));
-        }
-        
-        function updateGauge(percentage) {
-            const gauge = document.getElementById('gaugeProgress');
-            if (!gauge) return;
+        // Función para guardar configuración
+        async function saveConfig() {
+            const emptyWeight = parseFloat(document.getElementById('emptyWeight').value);
+            const fullWeight = parseFloat(document.getElementById('fullWeight').value);
             
-            const circumference = 314.16;
-            const offset = circumference - (percentage / 100) * circumference;
-            gauge.style.strokeDashoffset = offset;
-            
-            let color = '#10b981';
-            if (percentage <= 10) color = '#ef4444';
-            else if (percentage <= 25) color = '#f97316';
-            else if (percentage <= 50) color = '#f59e0b';
-            
-            gauge.style.stroke = color;
-            
-            const percentageElement = document.getElementById('gasPercentage');
-            if (percentageElement) {
-                percentageElement.style.color = color;
-                percentageElement.textContent = percentage.toFixed(1) + '%';
+            if (isNaN(emptyWeight) || isNaN(fullWeight)) {
+                document.getElementById('configResult').innerHTML = '<div class="status status-error">❌ Por favor ingrese valores numéricos válidos</div>';
+                return;
             }
             
-            console.log('📊 Medidor actualizado:', percentage.toFixed(1) + '%');
-        }
-        
-        function initChart() {
-            const ctx = document.getElementById('weightChart').getContext('2d');
-            weightChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Peso Neto (kg)',
-                        data: [],
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
-        }
-        
-        function generateHistoricalData(currentWeight) {
-            const data = [];
-            const labels = [];
-            const now = new Date();
-            
-            for (let i = 23; i >= 0; i--) {
-                const time = new Date(now.getTime() - i * 60 * 60 * 1000);
-                const hour = time.getHours().toString().padStart(2, '0') + ':00';
-                const weight = Math.max(0, currentWeight + (i * 0.05) + (Math.random() - 0.5) * 0.1);
-                
-                labels.push(hour);
-                data.push(parseFloat(weight.toFixed(2)));
+            if (emptyWeight >= fullWeight) {
+                document.getElementById('configResult').innerHTML = '<div class="status status-error">❌ El peso lleno debe ser mayor que el peso vacío</div>';
+                return;
             }
             
-            return { labels, data };
-        }
-        
-        function updateChart(currentWeight) {
-            if (!weightChart) return;
-            
-            const historical = generateHistoricalData(currentWeight);
-            weightChart.data.labels = historical.labels;
-            weightChart.data.datasets[0].data = historical.data;
-            weightChart.update();
-            
-            const maxWeight = Math.max(...historical.data);
-            const minWeight = Math.min(...historical.data);
-            const trend = historical.data[0] > historical.data[historical.data.length - 1] ? '📉 Descendente' : '📈 Ascendente';
-            
-            document.getElementById('maxWeight').textContent = maxWeight.toFixed(2) + ' kg';
-            document.getElementById('minWeight').textContent = minWeight.toFixed(2) + ' kg';
-            document.getElementById('trend').textContent = trend;
-        }
-        
-        async function updateData() {
             try {
-                updateDebugInfo('Consultando API...');
+                document.getElementById('configResult').innerHTML = '<div class="status">🔄 Guardando configuración...</div>';
+                
+                const response = await fetch('/api/update-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        clientCode: 'CLI3U0KM7I1',
+                        scaleCode: 'BSCWSBNSJBD',
+                        empty_weight: emptyWeight,
+                        full_weight: fullWeight
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('configResult').innerHTML = '<div class="status status-success">✅ Configuración guardada exitosamente</div>';
+                    setTimeout(checkData, 2000); // Actualizar datos después de 2 segundos
+                } else {
+                    document.getElementById('configResult').innerHTML = '<div class="status status-error">❌ Error: ' + result.error + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('configResult').innerHTML = '<div class="status status-error">❌ Error de conexión: ' + error.message + '</div>';
+            }
+        }
+        
+        // Función para verificar datos
+        async function checkData() {
+            try {
+                document.getElementById('debugInfo').textContent = '🔄 Consultando datos...';
                 
                 const response = await fetch('/api/weight-data?clientCode=CLI3U0KM7I1&scaleCode=BSCWSBNSJBD&t=' + Date.now());
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
                 const data = await response.json();
-                console.log('📥 Respuesta API:', data);
+                
+                console.log('Datos recibidos:', data);
                 
                 if (data.success && data.data.current) {
                     const current = data.data.current;
                     
-                    const totalWeight = current.weight;
-                    const netWeight = current.net_weight;
-                    const gasPercentage = current.gas_percentage;
-                    const capacity = current.full_weight - current.empty_weight;
+                    // Mostrar datos principales
+                    document.getElementById('dataDisplay').innerHTML = 
+                        `Peso Total: ${current.weight.toFixed(2)} kg<br>` +
+                        `Peso Neto: ${current.net_weight.toFixed(2)} kg<br>` +
+                        `Gas: ${current.gas_percentage.toFixed(1)}%`;
                     
-                    updateDebugInfo(`${data.data.data_source}: ${totalWeight.toFixed(2)}kg → ${netWeight.toFixed(2)}kg → ${gasPercentage.toFixed(1)}%`);
-                    
+                    // Mostrar estado
                     if (data.data.has_real_data) {
-                        const esp32Time = new Date(data.data.esp32_timestamp).getTime();
-                        if (esp32Time > lastESP32DataTime) {
-                            lastESP32DataTime = esp32Time;
-                            esp32DataReceived = true;
-                            
-                            document.getElementById('esp32ConnectionStatus').textContent = '✅ Conectado - Datos REALES';
-                            document.getElementById('esp32ConnectionStatus').style.color = '#10b981';
-                            document.getElementById('lastESP32Data').textContent = totalWeight.toFixed(3) + ' kg (REAL)';
-                            document.getElementById('lastESP32Update').textContent = new Date(esp32Time).toLocaleTimeString();
-                            document.getElementById('esp32Status').textContent = '✅ Datos reales';
-                            document.getElementById('esp32Status').style.color = '#10b981';
-                        }
+                        document.getElementById('statusInfo').innerHTML = '✅ Recibiendo datos reales del ESP32';
+                        document.getElementById('statusInfo').className = 'status status-success';
                     } else {
-                        document.getElementById('esp32ConnectionStatus').textContent = '⚠️ Usando datos por defecto';
-                        document.getElementById('esp32ConnectionStatus').style.color = '#f59e0b';
-                        document.getElementById('lastESP32Data').textContent = totalWeight.toFixed(3) + ' kg (DEFAULT)';
-                        document.getElementById('esp32Status').textContent = '⚠️ Sin datos ESP32';
-                        document.getElementById('esp32Status').style.color = '#f59e0b';
+                        document.getElementById('statusInfo').innerHTML = '⚠️ ' + (data.data.message || 'Sin datos del ESP32');
+                        document.getElementById('statusInfo').className = 'status status-error';
                     }
                     
-                    updateGauge(gasPercentage);
-                    
-                    document.getElementById('totalWeight').textContent = totalWeight.toFixed(3) + ' kg';
-                    document.getElementById('netWeight').textContent = netWeight.toFixed(3) + ' kg';
-                    document.getElementById('digitalWeight').textContent = netWeight.toFixed(2);
-                    document.getElementById('detailTotal').textContent = totalWeight.toFixed(3) + ' kg (' + data.data.data_source + ')';
-                    document.getElementById('detailEmpty').textContent = config.empty_weight.toFixed(1) + ' kg';
-                    document.getElementById('detailCapacity').textContent = capacity.toFixed(1) + ' kg';
-                    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
-                    
-                    updateChart(netWeight);
-                    
-                    document.getElementById('apiStatus').textContent = data.data.has_real_data ? '✅ Datos reales' : '⚠️ Datos por defecto';
-                    document.getElementById('apiStatus').style.color = data.data.has_real_data ? '#10b981' : '#f59e0b';
-                    
+                    // Mostrar información de debug
+                    document.getElementById('debugInfo').innerHTML = 
+                        `<strong>Estado:</strong> ${data.data.data_source}<br>` +
+                        `<strong>Peso ESP32:</strong> ${current.weight} kg<br>` +
+                        `<strong>Configuración:</strong> Vacío=${current.empty_weight}kg, Lleno=${current.full_weight}kg<br>` +
+                        `<strong>Cálculo:</strong> ${current.weight} - ${current.empty_weight} = ${current.net_weight} kg<br>` +
+                        `<strong>Porcentaje:</strong> ${current.gas_percentage.toFixed(1)}%<br>` +
+                        `<strong>Timestamp:</strong> ${new Date(current.timestamp).toLocaleString()}`;
                 } else {
-                    updateDebugInfo('API sin datos válidos');
+                    document.getElementById('dataDisplay').textContent = 'Sin datos disponibles';
+                    document.getElementById('statusInfo').innerHTML = '❌ Error obteniendo datos';
+                    document.getElementById('statusInfo').className = 'status status-error';
+                    document.getElementById('debugInfo').textContent = 'Error: ' + JSON.stringify(data, null, 2);
                 }
             } catch (error) {
-                console.error('❌ Error:', error);
-                updateDebugInfo('Error: ' + error.message);
+                document.getElementById('dataDisplay').textContent = 'Error de conexión';
+                document.getElementById('statusInfo').innerHTML = '❌ Error de conexión';
+                document.getElementById('statusInfo').className = 'status status-error';
+                document.getElementById('debugInfo').textContent = 'Error: ' + error.message;
             }
         }
         
-        function checkESP32Status() {
-            const now = Date.now();
-            if (esp32DataReceived && (now - lastESP32DataTime) < 60000) {
-                document.getElementById('esp32Status').textContent = '✅ Activo';
-                document.getElementById('esp32Status').style.color = '#10b981';
-            } else if (esp32DataReceived) {
-                document.getElementById('esp32Status').textContent = '⚠️ Sin datos recientes';
-                document.getElementById('esp32Status').style.color = '#f59e0b';
-            } else {
-                document.getElementById('esp32Status').textContent = '🔄 Esperando';
-                document.getElementById('esp32Status').style.color = '#6b7280';
-            }
-        }
-        
-        function showAlert(message, type) {
-            const alert = document.getElementById('configAlert');
-            alert.className = `alert alert-${type}`;
-            alert.textContent = message;
-            alert.classList.remove('hidden');
-            
-            setTimeout(() => {
-                alert.classList.add('hidden');
-            }, 5000);
-        }
-        
-        function setupEvents() {
-            document.getElementById('editConfigBtn').addEventListener('click', function() {
-                document.getElementById('configDisplay').classList.add('hidden');
-                document.getElementById('configEdit').classList.remove('hidden');
-                document.getElementById('configStatus').textContent = '🔧 Editando';
-                document.getElementById('configStatus').style.color = '#f59e0b';
-            });
-            
-            document.getElementById('cancelConfigBtn').addEventListener('click', function() {
-                document.getElementById('configDisplay').classList.remove('hidden');
-                document.getElementById('configEdit').classList.add('hidden');
-                document.getElementById('configStatus').textContent = '✅ Funcional';
-                document.getElementById('configStatus').style.color = '#10b981';
-                updateConfigDisplay();
-            });
-            
-            document.getElementById('saveConfigBtn').addEventListener('click', async function() {
-                const emptyWeight = parseFloat(document.getElementById('emptyWeightInput').value);
-                const fullWeight = parseFloat(document.getElementById('fullWeightInput').value);
-                
-                if (isNaN(emptyWeight) || isNaN(fullWeight)) {
-                    showAlert('Por favor, ingrese valores numéricos válidos.', 'error');
-                    return;
-                }
-                
-                if (emptyWeight <= 0) {
-                    showAlert('El peso del cilindro vacío debe ser mayor que 0.', 'error');
-                    return;
-                }
-                
-                if (fullWeight <= emptyWeight) {
-                    showAlert('El peso del cilindro lleno debe ser mayor que el peso vacío.', 'error');
-                    return;
-                }
-                
-                try {
-                    document.getElementById('configStatus').textContent = '💾 Guardando...';
-                    document.getElementById('configStatus').style.color = '#f59e0b';
-                    
-                    const response = await fetch('/api/update-config', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            clientCode: 'CLI3U0KM7I1',
-                            scaleCode: 'BSCWSBNSJBD',
-                            empty_weight: emptyWeight,
-                            full_weight: fullWeight
-                        })
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        config.empty_weight = emptyWeight;
-                        config.full_weight = fullWeight;
-                        saveConfig();
-                        updateConfigDisplay();
-                        
-                        document.getElementById('configDisplay').classList.remove('hidden');
-                        document.getElementById('configEdit').classList.add('hidden');
-                        document.getElementById('configStatus').textContent = '✅ Guardado';
-                        document.getElementById('configStatus').style.color = '#10b981';
-                        
-                        showAlert('✅ Configuración guardada exitosamente.', 'success');
-                        
-                        setTimeout(updateData, 1000);
-                    } else {
-                        document.getElementById('configStatus').textContent = '❌ Error';
-                        document.getElementById('configStatus').style.color = '#ef4444';
-                        showAlert('Error: ' + (result.error || 'Error desconocido'), 'error');
-                    }
-                } catch (error) {
-                    console.error('❌ Error:', error);
-                    document.getElementById('configStatus').textContent = '❌ Error';
-                    document.getElementById('configStatus').style.color = '#ef4444';
-                    showAlert('Error de conexión.', 'error');
-                }
-            });
-        }
-        
+        // Cargar datos al iniciar
         document.addEventListener('DOMContentLoaded', function() {
-            updateDebugInfo('Inicializando dashboard...');
-            
-            loadConfig();
-            initChart();
-            setupEvents();
-            
-            updateData();
-            setInterval(updateData, 8000);
-            setInterval(checkESP32Status, 5000);
-            
-            console.log('✅ Dashboard inicializado completamente');
+            checkData();
+            // Actualizar cada 10 segundos
+            setInterval(checkData, 10000);
         });
     </script>
 </body>
 </html>
-<!-- Deploy trigger: 2025-12-22 -->
-
