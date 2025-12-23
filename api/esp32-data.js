@@ -1,11 +1,9 @@
-// Variable global para almacenar datos del ESP32
-if (!global.latestESP32Data) {
-  global.latestESP32Data = null;
-  console.log('🔥 [ESP32-DATA] Variable global inicializada');
-}
+import { writeFileSync, readFileSync, existsSync } from 'fs';
+import { join } from 'path';
+
+const DATA_FILE = '/tmp/esp32-data.json';
 
 export default function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -19,59 +17,59 @@ export default function handler(req, res) {
       const data = req.body;
       const timestamp = new Date().toISOString();
       
-      console.log('🔥 [ESP32-DATA] ===== DATOS RECIBIDOS =====');
       console.log('🔥 [ESP32-DATA] Peso recibido:', data.weight, 'kg');
-      console.log('🔥 [ESP32-DATA] Cliente:', data.clientCode);
-      console.log('🔥 [ESP32-DATA] Báscula:', data.scaleCode);
-      console.log('🔥 [ESP32-DATA] Timestamp:', timestamp);
       
-      // Verificar datos básicos
       if (!data.weight || !data.clientCode || !data.scaleCode) {
-        console.error('❌ [ESP32-DATA] DATOS INCOMPLETOS');
         return res.status(400).json({
           success: false,
           error: 'Datos incompletos'
         });
       }
       
-      // Verificar credenciales
       if (data.clientCode !== 'CLI3U0KM7I1' || data.scaleCode !== 'BSCWSBNSJBD') {
-        console.error('❌ [ESP32-DATA] CREDENCIALES INVÁLIDAS');
         return res.status(401).json({
           success: false,
           error: 'Credenciales inválidas'
         });
       }
       
-      // ALMACENAR EN VARIABLE GLOBAL
-      const storedData = {
+      // Preparar datos para almacenar
+      const esp32Data = {
         weight: parseFloat(data.weight),
         timestamp: timestamp,
         clientCode: data.clientCode,
         scaleCode: data.scaleCode,
         version: data.version || 'unknown',
-        received_at: timestamp,
-        wifi_rssi: data.wifi_rssi || null,
-        uptime_ms: data.uptime_ms || null,
-        free_heap: data.free_heap || null
+        received_at: timestamp
       };
       
-      global.latestESP32Data = storedData;
+      // Leer datos existentes
+      let allData = { esp32: null, config: null };
+      if (existsSync(DATA_FILE)) {
+        try {
+          const fileContent = readFileSync(DATA_FILE, 'utf8');
+          allData = JSON.parse(fileContent);
+        } catch (e) {
+          console.log('🔥 [ESP32-DATA] Creando nuevo archivo de datos');
+        }
+      }
       
-      console.log('🔥 [ESP32-DATA] ===== ALMACENADO EN GLOBAL =====');
-      console.log('🔥 [ESP32-DATA] global.latestESP32Data:', JSON.stringify(global.latestESP32Data, null, 2));
-      console.log('🔥 [ESP32-DATA] Peso almacenado:', global.latestESP32Data.weight, 'kg');
-      console.log('🔥 [ESP32-DATA] Variable global existe:', !!global.latestESP32Data);
+      // Actualizar datos ESP32
+      allData.esp32 = esp32Data;
       
-      // RESPUESTA EXITOSA
+      // Guardar en archivo
+      writeFileSync(DATA_FILE, JSON.stringify(allData, null, 2));
+      
+      console.log('🔥 [ESP32-DATA] GUARDADO EN ARCHIVO:', esp32Data.weight, 'kg');
+      
       return res.status(200).json({
         success: true,
         message: 'Datos recibidos correctamente',
-        data: storedData,
+        data: esp32Data,
         debug: {
-          stored_weight: global.latestESP32Data.weight,
+          stored_weight: esp32Data.weight,
           timestamp: timestamp,
-          global_variable_exists: !!global.latestESP32Data
+          file_saved: true
         }
       });
       
