@@ -1,7 +1,13 @@
 {
   "name": "pesa-inteligente-vercel",
-  "version": "1.0.5",
+  "version": "1.0.7",
+  "description": "Dashboard KontrolGas - Node 24.x forzado",
   "engines": {
-    "node": "24.x"
+    "node": "24.x",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "echo 'Build completed'",
+    "start": "echo 'Start completed'"
   }
 }
