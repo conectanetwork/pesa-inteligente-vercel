@@ -1,9 +1,7 @@
 {
   "name": "pesa-inteligente-vercel",
-  "version": "1.0.8",
-  "description": "Dashboard KontrolGas - Archivos nuevos",
+  "version": "1.0.10",
   "engines": {
-    "node": "24.x",
-    "npm": ">=10.0.0"
+    "node": "24.x"
   }
 }
